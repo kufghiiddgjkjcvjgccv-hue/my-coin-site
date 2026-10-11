@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>NS & Top Coin | কয়েন সেল প্ল্যাটফর্ম</title>
+    
+    <script>
+        if (localStorage.getItem('nsCoinTheme') === 'dark') { document.documentElement.classList.add('dark'); }
+        const savedColor = localStorage.getItem('nsCoinThemeColor');
+        if (savedColor) { document.documentElement.setAttribute('data-theme', savedColor); }
+    </script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { DEFAULT: 'var(--color-brand)', light: 'var(--color-brand-light)', dark: 'var(--color-brand-dark)', } } } }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        
+        /* সম্পূর্ণভাবে স্ক্রল বাউন্স এবং রিফ্রেশ লক করা হলো */
+        html, body { 
+            overscroll-behavior: none; /* CSS দিয়ে রিফ্রেশ ব্লক */
+            font-family: 'Hind Siliguri', sans-serif; 
+            transition: background-color 0.3s, color 0.3s; 
+        }
+        
+        .glass-effect { backdrop-filter: blur(10px); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        
+        .floating-support { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+        .support-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+        .support-btn:hover { transform: scale(1.1); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
+        .trust-badge { animation: trustPulse 2s infinite; }
+        @keyframes trustPulse { 0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); } 70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); } }
+        
+        :root { --color-brand: #4f46e5; --color-brand-light: #e0e7ff; --color-brand-dark: #3730a3; }
+        [data-theme="rose"] { --color-brand: #e11d48; --color-brand-light: #ffe4e6; --color-brand-dark: #be123c; }
+        [data-theme="emerald"] { --color-brand: #10b981; --color-brand-light: #d1fae5; --color-brand-dark: #047857; }
+        [data-theme="amber"] { --color-brand: #f59e0b; --color-brand-light: #fef3c7; --color-brand-dark: #b45309; }
+        [data-theme="purple"] { --color-brand: #a855f7; --color-brand-light: #f3e8ff; --color-brand-dark: #7e22ce; }
+        [data-theme="cyan"] { --color-brand: #06b6d4; --color-brand-light: #cffafe; --color-brand-dark: #0e7490; }
+        [data-theme="slate"] { --color-brand: #64748b; --color-brand-light: #f1f5f9; --color-brand-dark: #334155; }
+
+        #app-preloader { position: fixed; inset: 0; background-color: #f3f4f6; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        html.dark #app-preloader { background-color: #111827; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e7ff; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        html.dark .spinner { border-color: #374151; border-top-color: #818cf8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .preloader-text { font-family: 'Hind Siliguri', sans-serif; font-size: 18px; font-weight: bold; color: #4f46e5; letter-spacing: 1px; }
+        html.dark .preloader-text { color: #818cf8; }
+    </style>
+</head>
+<body class="text-gray-800 bg-gray-100 dark:bg-gray-900 dark:text-gray-200 antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <div id="app-preloader">
+        <div class="spinner"></div>
+        <div class="preloader-text">অপেক্ষা করুন...</div>
+    </div>
+
+    <nav class="bg-brand dark:bg-brand-dark text-white shadow-lg sticky top-0 z-40 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center py-2 sm:h-16 gap-2">
+                <!-- User Logo Section -->
+                <div class="flex items-center select-none">
+                    <div id="navbarLogoContainer" class="mr-2 pointer-events-none flex items-center justify-center">
+                        <i class="fa-solid fa-coins text-2xl text-yellow-400"></i>
+                    </div>
+                    <span id="navbarSiteName" class="font-bold text-xl tracking-wide pointer-events-none">NS & Top Coin</span>
+                </div>
+                
+                <div class="flex items-center gap-3 sm:gap-4 bg-white/20 px-3 sm:px-4 py-1.5 rounded-full backdrop-blur-sm">
+                    <button type="button" id="langToggleBtn" onclick="toggleLang()" class="font-bold text-sm bg-white/30 text-white rounded px-2 py-0.5 hover:bg-white/50 transition border border-white/40 shadow-sm">EN</button>
+                    <div class="flex gap-2 border-l border-r border-white/30 px-3">
+                        <button type="button" id="cycleThemeBtn" class="p-1 hover:scale-110 transition" title="Theme">
+                            <i class="fa-solid fa-palette text-xl text-white pointer-events-none"></i>
+                        </button>
+                    </div>
+                    <button type="button" id="toggleDarkModeBtn" class="p-1 hover:scale-110 transition" title="Dark Mode">
+                        <i id="themeIcon" class="fa-solid fa-moon text-xl text-yellow-300 pointer-events-none"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mainContentArea" class="flex-grow w-full relative">
+        <div id="userView" class="container mx-auto px-4 py-8 max-w-4xl">
+            <div class="floating-support" id="supportLinksContainer"></div>
+
+            <div id="notice-banner" class="hidden mb-6 bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-900 dark:text-yellow-100 p-5 rounded-lg shadow-md">
+                <div class="flex items-start">
+                    <i class="fa-solid fa-bullhorn text-3xl text-yellow-600 dark:text-yellow-400 mr-4 mt-1 animate-pulse"></i>
+                    <div>
+                        <h3 class="font-black text-xl mb-1"><span class="lang-str" data-bn="অ্যাডমিন নোটিশ:" data-en="Admin Notice:">অ্যাডমিন নোটিশ:</span></h3>
+                        <p id="notice-text" class="font-bold text-lg leading-relaxed"></p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="trust-indicator" class="trust-badge bg-green-100 dark:bg-green-900/40 border-2 border-green-400 dark:border-green-600 text-green-800 dark:text-green-300 rounded-full px-6 py-2.5 flex items-center justify-center w-max mx-auto mb-8 shadow-sm font-bold text-sm md:text-base">
+                <i class="fa-solid fa-shield-halved mr-2 text-green-600 dark:text-green-400 text-lg"></i> <span class="lang-str" data-bn="১০০% বিশ্বস্ত ও নিরাপদ প্ল্যাটফর্ম | ফাস্ট পেমেন্ট" data-en="100% Trusted & Secure Platform | Fast Payment">১০০% বিশ্বস্ত ও নিরাপদ প্ল্যাটফর্ম | ফাস্ট পেমেন্ট</span>
+            </div>
+
+            <div id="hero-header" class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3"><span class="lang-str" data-bn="সহজেই কয়েন সেল করুন" data-en="Sell Coins Easily">সহজেই কয়েন সেল করুন</span></h1>
+                <p class="text-gray-600 dark:text-gray-400 mb-6 font-medium"><span class="lang-str" data-bn="নিচের ধাপে ফর্মটি পূরণ করুন এবং নিশ্চিন্তে টাকা বুঝে নিন." data-en="Fill out the form below and receive your money securely.">নিচের ধাপে ফর্মটি পূরণ করুন এবং নিশ্চিন্তে টাকা বুঝে নিন.</span></p>
+            </div>
+
+            <section id="sell-section" class="mb-12">
+                <div id="system-stopped-container" class="hidden bg-red-50 dark:bg-red-900 border-2 border-red-300 rounded-xl p-8 text-center shadow-lg">
+                    <i class="fa-solid fa-lock text-6xl text-red-500 mb-4"></i>
+                    <h2 class="text-3xl font-bold text-red-800 dark:text-red-200 mb-3"><span class="lang-str" data-bn="কয়েন সেল সাময়িকভাবে বন্ধ আছে" data-en="Coin sales are temporarily closed">কয়েন সেল সাময়িকভাবে বন্ধ আছে</span></h2>
+                    <p id="system-stopped-text" class="text-lg text-gray-700 dark:text-gray-200 font-bold bg-white dark:bg-gray-800 p-4 rounded-lg inline-block shadow-sm"></p>
+                </div>
+                
+                <div id="active-system-container">
+                    <div id="sellFormContainer" class="space-y-6">
+                        
+                        <!-- Step 1 -->
+                        <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+                                <span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">১</span> 
+                                <span class="lang-str" data-bn="প্রথম কাজ: কোন কয়েন বিক্রি করবেন?" data-en="Step 1: Which coin will you sell?">প্রথম কাজ: কোন কয়েন বিক্রি করবেন?</span> <span class="text-red-500 ml-1">*</span>
+                            </h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-bold mb-4 ml-11">👉 <span class="lang-str" data-bn="যে কয়েনটি বিক্রি করবেন, নিচে তার উপর একটি চাপ দিন:" data-en="Click on the coin you want to sell below:">যে কয়েনটি বিক্রি করবেন, নিচে তার উপর একটি চাপ দিন:</span></p>
+                            <div id="dynamic-coin-list" class="grid grid-cols-2 md:grid-cols-3 gap-4 ml-0 sm:ml-11"></div>
+                            <input type="hidden" id="coinType">
+                            <input type="hidden" id="selectedCoinRate">
+                            <input type="hidden" id="selectedUsername">
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
+                                <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
+                                    <span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">২</span> <span class="lang-str" data-bn="দ্বিতীয় কাজ: কত 1k (হাজার) কয়েন সেল করবেন?" data-en="Step 2: How many 1k coins?">দ্বিতীয় কাজ: কত 1k (হাজার) কয়েন সেল করবেন?</span> <span class="text-red-500 ml-1">*</span>
+                                </h3>
+                                <span id="limitWarningText" class="mt-2 sm:mt-0 sm:ml-4 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-400 px-3 py-1 rounded text-xs font-bold border border-yellow-200 dark:border-yellow-700 w-max"></span>
+                            </div>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 font-bold mb-3 ml-11">👉 <span class="lang-str" data-bn="বক্সে লিখে দিন অথবা শর্টকাট বাটনে চাপ দিন:" data-en="Type in the box or click a shortcut button:">বক্সে লিখে দিন অথবা শর্টকাট বাটনে চাপ দিন:</span></p>
+                            <div class="ml-11">
+                                <div class="relative max-w-md">
+                                    <input type="number" id="coinAmount" class="lang-placeholder w-full px-4 py-3 text-lg font-bold rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-0 focus:border-brand pr-12" data-bn="যেমন: 50" data-en="E.g: 50" placeholder="যেমন: 50">
+                                    <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><span class="text-gray-500 font-bold text-lg k-symbol">k</span></div>
+                                </div>
+                                <div class="flex flex-wrap gap-2 mt-3 items-center">
+                                    <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="10">10k</button>
+                                    <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="20">20k</button>
+                                    <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="50">50k</button>
+                                </div>
+                            </div>
+                            <div id="calculatorDisplay" class="hidden ml-11 mt-5 bg-green-100 dark:bg-green-900 border-2 border-green-400 dark:border-green-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center max-w-md shadow-sm">
+                                <span class="text-green-800 dark:text-green-200 font-bold text-lg mb-2 sm:mb-0"><span class="lang-str" data-bn="আপনি মোট পাবেন:" data-en="You will receive:">আপনি মোট পাবেন:</span></span><span id="totalAmount" class="text-3xl font-black text-green-700 dark:text-green-400">৳০</span>
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৩</span> <span class="lang-str" data-bn="টাকা কিসে নিবেন?" data-en="Step 3: Payment Method?">টাকা কিসে নিবেন?</span> <span class="text-red-500 ml-1">*</span></h3>
+                            <div class="ml-11 max-w-md space-y-4">
+                                <select id="paymentMethod" onchange="updateAccountPlaceholder()" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-bold"></select>
+                                <input type="text" id="accountNumber" class="lang-placeholder w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-bold tracking-widest" data-bn="আপনার নাম্বারটি লিখুন (যেমন: 017...)" data-en="Enter your account number" placeholder="আপনার নাম্বারটি লিখুন (যেমন: 017...)">
+                            </div>
+                        </div>
+
+                        <!-- Step 4 -->
+                        <div id="step4-container" class="bg-brand-light dark:bg-brand-dark/40 p-6 rounded-2xl shadow-md border-l-4 border-brand transition-all duration-300">
+                            <h3 class="text-xl font-bold text-brand dark:text-brand-light mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৪</span> <span class="lang-str" data-bn="কয়েন ট্রান্সফার করুন" data-en="Step 4: Transfer Coins">কয়েন ট্রান্সফার করুন</span></h3>
+                            <div id="step4-initial" class="ml-11"><p class="text-gray-500 font-bold italic">⚠ <span class="lang-str" data-bn="অনুগ্রহ করে প্রথমে উপর থেকে যেকোনো একটি কয়েন সিলেক্ট করুন।" data-en="Please select a coin from above first.">অনুগ্রহ করে প্রথমে উপর থেকে যেকোনো একটি কয়েন সিলেক্ট করুন।</span></p></div>
+                            <div id="transfer-section" class="ml-11 hidden mt-2">
+                                <p class="text-sm text-gray-700 dark:text-gray-300 font-bold mb-3">👉 <span class="lang-str" data-bn="নীল রঙের 'কপি' বাটনে চাপ দিয়ে নিচের ইউজারনেমটি কপি করুন এবং সেই আইডিতে কয়েন ট্রান্সফার করুন।" data-en="Copy the username below using the blue 'Copy' button and transfer coins to that ID.">নীল রঙের 'কপি' বাটনে চাপ দিয়ে নিচের ইউজারনেমটি কপি করুন এবং সেই আইডিতে কয়েন ট্রান্সফার করুন।</span></p>
+                                <div class="bg-white dark:bg-gray-800 p-3 pl-4 rounded-lg border-2 border-brand-light flex justify-between items-center mb-2 max-w-md">
+                                    <span id="dynamic-username" class="font-mono text-xl font-black text-red-600 dark:text-red-400 tracking-wider"></span>
+                                    <button type="button" id="copyUsernameBtn" class="bg-brand text-white px-5 py-2 rounded-md font-bold transition hover:bg-brand-dark shadow flex items-center"><i class="fa-solid fa-copy mr-1 pointer-events-none"></i> <span class="lang-str" data-bn="কপি করুন" data-en="Copy">কপি করুন</span></button>
+                                </div>
+                            </div>
+                            <p class="text-sm text-red-700 dark:text-red-400 font-bold mt-4 ml-11"><i class="fa-solid fa-triangle-exclamation"></i> <span class="lang-str" data-bn="সতর্কতা: কয়েন পাঠানোর পর সাথে সাথে একটি স্ক্রিনশট তুলে রাখুন!" data-en="Warning: Take a screenshot immediately after sending the coins!">সতর্কতা: কয়েন পাঠানোর পর সাথে সাথে একটি স্ক্রিনশট তুলে রাখুন!</span></p>
+                        </div>
+
+                        <!-- Step 5 (Telegram Username) -->
+                        <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                             <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+                                <span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৫</span> 
+                                <span class="lang-str" data-bn="আপনার টেলিগ্রাম ইউজারনেম" data-en="Step 5: Telegram Username">আপনার টেলিগ্রাম ইউজারনেম</span> 
+                                <span id="tgStar" class="text-red-500 ml-1 hidden">*</span>
+                             </h3>
+                             <p class="text-sm text-gray-500 dark:text-gray-400 font-bold mb-3 ml-11">👉 <span id="tgInstruction" class="lang-str" data-bn="পেমেন্ট বা যেকোনো প্রয়োজনে যোগাযোগের জন্য টেলিগ্রাম ইউজারনেমটি দিন (ঐচ্ছিক/না দিলেও হবে):" data-en="Provide your Telegram username for communication (Optional):">পেমেন্ট বা যেকোনো প্রয়োজনে যোগাযোগের জন্য টেলিগ্রাম ইউজারনেমটি দিন (ঐচ্ছিক/না দিলেও হবে):</span></p>
+                             <div class="ml-11 max-w-md">
+                                 <div class="relative">
+                                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><i class="fa-brands fa-telegram text-gray-400"></i></div>
+                                     <input type="text" id="telegramUsername" class="lang-placeholder w-full pl-10 pr-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-bold focus:ring-0 focus:border-brand" data-bn="যেমন: @your_username (ঐচ্ছিক)" data-en="E.g: @your_username (Optional)" placeholder="যেমন: @your_username (ঐচ্ছিক)">
+                                 </div>
+                             </div>
+                        </div>
+
+                        <!-- Step 6 -->
+                        <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৬</span> <span class="lang-str" data-bn="স্ক্রিনশট প্রুফ দিন" data-en="Step 6: Upload Screenshot Proof">স্ক্রিনশট প্রুফ দিন</span> <span class="text-red-500 ml-1">*</span></h3>
+                            <div class="ml-11">
+                                <label for="proofImage" id="uploadBox" class="mt-1 flex flex-col items-center justify-center w-full h-32 border-2 border-brand-light dark:border-brand-dark border-dashed rounded-xl cursor-pointer bg-white dark:bg-gray-700 hover:bg-brand-light/50 transition">
+                                    <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                                        <i class="fa-solid fa-image text-4xl text-brand mb-2" id="uploadIcon"></i>
+                                        <p class="text-sm font-bold text-brand dark:text-brand-light"><span class="lang-str" data-bn="এখানে চাপ দিয়ে স্ক্রিনশট সিলেক্ট করুন" data-en="Click here to select screenshot">এখানে চাপ দিয়ে স্ক্রিনশট সিলেক্ট করুন</span></p>
+                                        <p id="fileNameDisplay" class="text-xs font-bold text-green-600 dark:text-green-400 mt-2 hidden bg-green-50 dark:bg-green-900/30 py-1 px-2 rounded"></p>
+                                    </div>
+                                    <input id="proofImage" type="file" accept="image/*" class="hidden" />
+                                </label>
+                            </div>
+                        </div>
+
+                        <p class="text-center font-bold text-gray-600 dark:text-gray-400 mt-6"><span class="lang-str" data-bn="সবকিছু ঠিক থাকলে নিচের সবুজ বাটনে একটি চাপ দিন।" data-en="If everything is correct, click the green button below.">সবকিছু ঠিক থাকলে নিচের সবুজ বাটনে একটি চাপ দিন।</span></p>
+                        <button type="button" id="submitBtn" class="w-full py-4 rounded-xl shadow-lg text-xl font-bold text-white bg-green-600 hover:bg-green-700 transition transform hover:-translate-y-1 flex justify-center items-center">
+                            <i class="fa-solid fa-paper-plane mr-2 text-2xl pointer-events-none"></i> <span id="submitBtnText" class="lang-str" data-bn="রিকোয়েস্ট পাঠিয়ে দিন" data-en="Send Request">রিকোয়েস্ট পাঠিয়ে দিন</span>
+                        </button>
+                    </div>
+                </div> 
+
+                <div id="autoHistorySection" class="mt-16 hidden">
+                    <div class="flex items-center justify-between mb-6 border-b dark:border-gray-700 pb-3">
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center"><i class="fa-solid fa-clock-rotate-left text-brand mr-2"></i> <span class="lang-str" data-bn="আপনার রিকোয়েস্ট হিস্ট্রি" data-en="Your Request History">আপনার রিকোয়েস্ট হিস্ট্রি</span></h2>
+                        <button type="button" id="clearHistoryBtn" class="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 px-3 py-1.5 rounded-md font-bold text-sm transition flex items-center border border-red-200 dark:border-red-800">
+                            <i class="fa-solid fa-trash-can mr-1 pointer-events-none"></i> <span class="lang-str" data-bn="সব ক্লিয়ার করুন" data-en="Clear All">সব ক্লিয়ার করুন</span>
+                        </button>
+                    </div>
+                    <div id="autoHistoryContainer" class="space-y-5"></div>
+                </div>
+            </section>
+        </div>
+    </div>
+জ
+    <!-- Alert Modal -->
+    <div id="customAlert" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden flex items-center justify-center z-[95] p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full text-center border dark:border-gray-700">
+            <div id="alertIcon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4"></div>
+            <h3 id="alertTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-2"></h3>
+            <p id="alertMessage" class="text-md text-gray-600 dark:text-gray-300 font-medium mb-6"></p>
+            <div id="alertButtons" class="flex gap-3 justify-center"></div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-[70] p-4 transition-opacity">
+        <button type="button" onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-red-600 rounded-full w-12 h-12 flex items-center justify-center text-2xl z-50 hover:scale-110 shadow-lg transition"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+        <div class="w-full h-full flex justify-center items-center p-4"><img id="fullSizeImage" src="" class="max-w-full max-h-full object-contain rounded shadow-2xl"></div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATYpTioZRY612OywkjbNbaccKRhxDYaAg",
+            authDomain: "nscoinshop.firebaseapp.com",
+            projectId: "nscoinshop",
+            storageBucket: "nscoinshop.firebasestorage.app",
+            messagingSenderId: "497930950808",
+            appId: "1:497930950808:web:74ebbe981dd1b1797cd8ed",
+            measurementId: "G-YCCNPT5GQM"
+        };
+        let appId = 'ns-top-coin-app';
+        let customToken = null;
+
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            appId = typeof __app_id !== 'undefined' ? __app_id : appId;
+            if (typeof __initial_auth_token !== 'undefined') customToken = __initial_auth_token;
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let currentUser = null;
+
+        let globalSettings = { siteName: 'NS & Top Coin', siteLogo: null, tgRequired: false, limits: {min: 1, max: 100}, support: {}, coins: [], methods: {bkash:true,nagad:true,rocket:true, binance:false}, systemActive: true, successSms: "SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।" };
+        
+        let cachedSet = localStorage.getItem('nsCoin_globalSettings');
+        if(cachedSet) { try { globalSettings = JSON.parse(cachedSet); } catch(e){} }
+
+        let allRequests = [];
+        let uploadedImageBase64 = null; 
+        let confirmActionResolver = null;
+        let activeCoinId = null; 
+        
+        let currentLang = localStorage.getItem('nsCoin_lang') || 'bn';
+        window.t = function(bnStr, enStr) { return currentLang === 'en' ? enStr : bnStr; }
+        
+        async function initAuth() {
+            try {
+                if (customToken) {
+                    try { await signInWithCustomToken(auth, customToken); } 
+                    catch(e) { await signInAnonymously(auth); }
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                startRealtimeListeners();
+            } catch (error) {
+                console.error("Auth error:", error);
+                showAlert('error', 'Database Error', 'ডাটাবেসের সাথে কানেক্ট করা যাচ্ছে না। দয়া করে ফায়ারবেস কনফিগ চেক করুন।');
+            }
+        }
+
+        function startRealtimeListeners() {
+            if (!currentUser) return;
+            
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    globalSettings = docSnap.data();
+                    localStorage.setItem('nsCoin_globalSettings', JSON.stringify(globalSettings)); 
+                    updateNavbarBranding();
+                    applySettingsDataToUser();
+                }
+            }, (error) => {
+                console.error(error);
+            });
+
+            const requestsRef = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
+            onSnapshot(requestsRef, (snapshot) => {
+                allRequests = [];
+                snapshot.forEach((doc) => {
+                    allRequests.push({ dbId: doc.id, ...doc.data() });
+                });
+                allRequests.sort((a, b) => b.createdAt - a.createdAt);
+                renderUserHistory();
+            }, (error) => console.error(error));
+        }
+
+        window.setLang = function(langCode) {
+            currentLang = langCode; localStorage.setItem('nsCoin_lang', langCode);
+            document.getElementById('langToggleBtn').innerText = langCode === 'bn' ? 'EN' : 'BN';
+            document.querySelectorAll('.lang-str').forEach(el => { if(el.getAttribute('data-' + langCode)) el.innerHTML = el.getAttribute('data-' + langCode); });
+            document.querySelectorAll('.lang-placeholder').forEach(el => { if(el.getAttribute('data-' + langCode)) el.placeholder = el.getAttribute('data-' + langCode); });
+            applySettingsDataToUser(); renderUserHistory();
+        }
+        window.toggleLang = function() { window.setLang(currentLang === 'bn' ? 'en' : 'bn'); }
+
+        const themes = ['default', 'rose', 'emerald', 'amber', 'purple', 'cyan', 'slate'];
+        let currentThemeIndex = 0;
+        function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); localStorage.setItem('nsCoinThemeColor', themeName); currentThemeIndex = Math.max(0, themes.indexOf(themeName)); }
+        document.getElementById('cycleThemeBtn').addEventListener('click', e => { e.preventDefault(); currentThemeIndex = (currentThemeIndex + 1) % themes.length; changeTheme(themes[currentThemeIndex]); });
+        document.getElementById('toggleDarkModeBtn').addEventListener('click', e => { e.preventDefault(); document.documentElement.classList.toggle('dark'); localStorage.setItem('nsCoinTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); updateThemeIcon(); });
+        function updateThemeIcon() { document.getElementById('themeIcon').className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-xl text-yellow-400 pointer-events-none' : 'fa-solid fa-moon text-xl text-yellow-300 pointer-events-none'; }
+
+        function updateNavbarBranding() {
+            document.getElementById('navbarSiteName').textContent = globalSettings.siteName || 'NS & Top Coin';
+            const logoContainer = document.getElementById('navbarLogoContainer');
+            if (globalSettings.siteLogo) logoContainer.innerHTML = `<img src="${globalSettings.siteLogo}" class="h-8 w-8 object-contain rounded-full shadow-sm">`;
+            else logoContainer.innerHTML = `<i class="fa-solid fa-coins text-2xl text-yellow-400"></i>`;
+            document.title = `${globalSettings.siteName || 'NS & Top Coin'} | ${window.t('কয়েন সেল প্ল্যাটফর্ম', 'Coin Sale Platform')}`; 
+        }
+
+        window.updateAccountPlaceholder = function() {
+            const methodSelect = document.getElementById('paymentMethod'); const accountInput = document.getElementById('accountNumber');
+            if (methodSelect.value === 'Binance') { accountInput.placeholder = window.t("আপনার বাইনান্স UID দিন", "Enter your Binance UID"); accountInput.setAttribute('data-bn', "আপনার বাইনান্স UID দিন"); accountInput.setAttribute('data-en', "Enter your Binance UID"); }
+            else { accountInput.placeholder = window.t("আপনার নাম্বারটি লিখুন (যেমন: 017...)", "Enter your account number"); accountInput.setAttribute('data-bn', "আপনার নাম্বারটি লিখুন (যেমন: 017...)"); accountInput.setAttribute('data-en', "Enter your account number"); }
+        }
+
+        function applySettingsDataToUser() {
+            const coinContainer = document.getElementById('dynamic-coin-list'); coinContainer.innerHTML = '';
+            if(globalSettings.coins) {
+                globalSettings.coins.forEach(coin => {
+                    let btn = document.createElement('button'); btn.type = 'button';
+                    let isActive = (coin.id === activeCoinId);
+                    let classes = 'coin-btn relative py-5 px-2 rounded-3xl transition-all font-bold text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 ';
+                    classes += isActive ? 'border-brand bg-brand-light dark:bg-brand-dark/30 ring-4 ring-brand-light border-2' : 'border-brand-light dark:border-gray-600 bg-white dark:bg-gray-800 border-2 hover:border-brand hover:shadow-lg';
+                    btn.className = classes; btn.id = 'btn-' + coin.id;
+                    let iconHtml = coin.logo ? `<img src="${coin.logo}" alt="${coin.name}" class="w-12 h-12 object-cover rounded-full mb-1 pointer-events-none shadow-sm">` : `<div class="bg-brand-light dark:bg-brand-dark/50 p-3 rounded-full mb-1 pointer-events-none"><i class="fa-solid fa-coins text-3xl text-brand dark:text-brand-light"></i></div>`;
+                    btn.innerHTML = `${iconHtml}<span class="text-xl font-black tracking-wide pointer-events-none">${coin.name}</span><div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-full border mt-1 shadow-sm pointer-events-none"><span class="text-sm font-bold">1k = ৳${coin.price}</span></div>`;
+                    btn.addEventListener('click', e => { e.preventDefault(); selectCoinUser(coin.id, coin.name, coin.price, coin.username); });
+                    coinContainer.appendChild(btn);
+                });
+            }
+
+            const methodSelect = document.getElementById('paymentMethod'); 
+            if(document.activeElement !== methodSelect) {
+                const currentMethod = methodSelect.value;
+                methodSelect.innerHTML = `<option value="">-- ${window.t('মাধ্যম সিলেক্ট করুন', 'Select Method')} --</option>`;
+                if(globalSettings.methods?.bkash) methodSelect.innerHTML += `<option value="Bkash" ${currentMethod === 'Bkash' ? 'selected' : ''}>${window.t('বিকাশ', 'bKash')}</option>`;
+                if(globalSettings.methods?.nagad) methodSelect.innerHTML += `<option value="Nagad" ${currentMethod === 'Nagad' ? 'selected' : ''}>${window.t('নগদ', 'Nagad')}</option>`;
+                if(globalSettings.methods?.rocket) methodSelect.innerHTML += `<option value="Rocket" ${currentMethod === 'Rocket' ? 'selected' : ''}>${window.t('রকেট', 'Rocket')}</option>`;
+                if(globalSettings.methods?.binance) methodSelect.innerHTML += `<option value="Binance" ${currentMethod === 'Binance' ? 'selected' : ''}>${window.t('বাইনান্স', 'Binance')}</option>`;
+                if (methodSelect.value !== currentMethod && currentMethod !== "") methodSelect.value = "";
+                window.updateAccountPlaceholder();
+            }
+
+            let minL = globalSettings.limits?.min || 1; let maxL = globalSettings.limits?.max || 100;
+            document.getElementById('limitWarningText').textContent = `${window.t('লিমিট', 'Limit')}: ${minL}k - ${maxL}k`;
+            if(document.activeElement !== document.getElementById('coinAmount')){ document.getElementById('coinAmount').min = minL; document.getElementById('coinAmount').max = maxL; }
+
+            const supContainer = document.getElementById('supportLinksContainer'); supContainer.innerHTML = '';
+            let waLink = globalSettings.support?.wa || '';
+            if(waLink) { if(!waLink.startsWith('http')) { let cWa = waLink.replace(/[^0-9+]/g, ''); if(cWa.startsWith('01') && cWa.length === 11) cWa = '88' + cWa; waLink = 'https://wa.me/' + cWa; } supContainer.innerHTML += `<a href="${waLink}" target="_blank" class="support-btn" style="background-color: #25D366;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`; }
+            let tgLink = globalSettings.support?.tg || '';
+            if(tgLink) { if(!tgLink.startsWith('http')) { tgLink = 'https://t.me/' + tgLink.replace('@', '').trim(); } supContainer.innerHTML += `<a href="${tgLink}" target="_blank" class="support-btn" style="background-color: #0088cc;" title="Telegram"><i class="fa-brands fa-telegram"></i></a>`; }
+            let fbLink = globalSettings.support?.fb || '';
+            if(fbLink) { if(!fbLink.startsWith('http')) { fbLink = 'https://facebook.com/' + fbLink.trim(); } supContainer.innerHTML += `<a href="${fbLink}" target="_blank" class="support-btn" style="background-color: #1877F2;" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>`; }
+
+            if(globalSettings.tgRequired) {
+                document.getElementById('tgStar').classList.remove('hidden');
+                document.getElementById('tgInstruction').textContent = window.t("পেমেন্ট বা যেকোনো প্রয়োজনে যোগাযোগের জন্য টেলিগ্রাম ইউজারনেমটি দিন:", "Provide your Telegram username for communication:");
+                document.getElementById('telegramUsername').placeholder = window.t("যেমন: @your_username", "E.g: @your_username");
+            } else {
+                document.getElementById('tgStar').classList.add('hidden');
+                document.getElementById('tgInstruction').textContent = window.t("পেমেন্ট বা যেকোনো প্রয়োজনে যোগাযোগের জন্য টেলিগ্রাম ইউজারনেমটি দিন (ঐচ্ছিক/না দিলেও হবে):", "Provide your Telegram username for communication (Optional):");
+                document.getElementById('telegramUsername').placeholder = window.t("যেমন: @your_username (ঐচ্ছিক)", "E.g: @your_username (Optional)");
+            }
+
+            if(globalSettings.noticeActive && globalSettings.noticeText) { document.getElementById('notice-banner').classList.remove('hidden'); document.getElementById('notice-text').textContent = globalSettings.noticeText; } else { document.getElementById('notice-banner').classList.add('hidden'); }
+            if(globalSettings.systemActive === false) { document.getElementById('active-system-container').classList.add('hidden'); document.getElementById('hero-header').classList.add('hidden'); document.getElementById('trust-indicator').classList.add('hidden'); document.getElementById('system-stopped-container').classList.remove('hidden'); document.getElementById('system-stopped-text').textContent = globalSettings.stopMsg || window.t("বর্তমানে আমাদের কয়েন সেল বন্ধ আছে।", "Our coin sales are currently closed."); } else { document.getElementById('active-system-container').classList.remove('hidden'); document.getElementById('hero-header').classList.remove('hidden'); document.getElementById('trust-indicator').classList.remove('hidden'); document.getElementById('system-stopped-container').classList.add('hidden'); }
+        }
+
+        const coinTypeInput = document.getElementById('coinType'), coinRateInput = document.getElementById('selectedCoinRate'), coinAmountInput = document.getElementById('coinAmount'), totalAmountDisplay = document.getElementById('totalAmount'), calculatorDisplay = document.getElementById('calculatorDisplay');
+
+        function selectCoinUser(id, name, price, username) {
+            activeCoinId = id; coinTypeInput.value = name; coinRateInput.value = price;
+            document.querySelectorAll('.coin-btn').forEach(btn => { btn.className = 'coin-btn relative py-5 px-2 rounded-3xl transition-all font-bold text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 border-brand-light dark:border-gray-600 bg-white dark:bg-gray-800 border-2 hover:border-brand hover:shadow-lg'; });
+            const activeBtn = document.getElementById('btn-' + id);
+            if(activeBtn) activeBtn.className = 'coin-btn relative py-5 px-2 rounded-3xl transition-all font-bold text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 border-brand bg-brand-light dark:bg-brand-dark/30 ring-4 ring-brand-light border-2';
+            
+            document.getElementById('step4-initial').classList.add('hidden');
+            const transferSec = document.getElementById('transfer-section');
+            if(username && username.trim() !== '') { transferSec.classList.remove('hidden'); document.getElementById('dynamic-username').textContent = username; document.getElementById('dynamic-username').setAttribute('data-username', username); } else { transferSec.classList.add('hidden'); }
+            calculateTotalUser();
+        }
+
+        function calculateTotalUser() {
+            const amount = parseFloat(coinAmountInput.value) || 0, price = parseFloat(coinRateInput.value) || 0;
+            if (coinTypeInput.value && amount > 0) {
+                let totalTk = price * amount;
+                totalAmountDisplay.textContent = `৳${totalTk % 1 !== 0 ? totalTk.toFixed(2) : totalTk}`; 
+                calculatorDisplay.classList.remove('hidden'); 
+            } else { 
+                calculatorDisplay.classList.add('hidden'); 
+            }
+        }
+        coinAmountInput.addEventListener('input', calculateTotalUser); 
+
+        document.querySelectorAll('.preset-amount-btn').forEach(btn => { btn.addEventListener('click', function(e) { e.preventDefault(); coinAmountInput.value = this.getAttribute('data-amount'); calculateTotalUser(); }); });
+
+        document.getElementById('copyUsernameBtn').addEventListener('click', function(e) {
+            e.preventDefault(); const text = document.getElementById('dynamic-username').getAttribute('data-username'); if(!text) return;
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            try { document.execCommand('copy'); showAlert('success', window.t('কপি হয়েছে!', 'Copied!'), window.t(`ইউজারনেম '${text}' কপি করা হয়েছে।`, `Username '${text}' has been copied.`)); } catch (err) { showAlert('error', window.t('ত্রুটি', 'Error'), window.t('কপি করতে সমস্যা হয়েছে।', 'Failed to copy.')); } document.body.removeChild(textArea);
+        });
+
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let width = img.width, height = img.height; const MAX_SIZE = 500;
+                    if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.5));
+                }; img.onerror = () => { showAlert('error', window.t('ছবি সাপোর্ট করছে না!', 'Image Not Supported!'), window.t('অনুগ্রহ করে সাধারণ (jpg/png) স্ক্রিনশট আপলোড করুন।', 'Please upload a standard (jpg/png) image.')); };
+                img.src = event.target.result;
+            }; reader.readAsDataURL(file);
+        }
+
+        document.getElementById('proofImage').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) { document.getElementById('fileNameDisplay').textContent = window.t("ছবি সিলেক্ট করা হয়েছে", "Image selected"); document.getElementById('fileNameDisplay').classList.remove('hidden'); document.getElementById('uploadIcon').className = 'fa-solid fa-file-circle-check text-4xl text-green-500 mb-2 pointer-events-none'; compressImage(file, function(cb) { uploadedImageBase64 = cb; }); }
+        });
+
+        function showAlert(type, title, message) {
+            const modal = document.getElementById('customAlert'), icon = document.getElementById('alertIcon'), btnContainer = document.getElementById('alertButtons');
+            document.getElementById('alertTitle').textContent = title; document.getElementById('alertMessage').textContent = message;
+            if (type === 'success') { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4 text-green-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-check"></i>'; } else if (type === 'confirm') { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4 text-yellow-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-circle-question"></i>'; } else { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4 text-red-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
+            if(type === 'confirm') { btnContainer.innerHTML = `<button type="button" id="alertCancelBtn" class="flex-1 rounded-lg px-4 py-3 bg-gray-200 dark:bg-gray-700 font-bold text-gray-800 dark:text-white transition">${window.t('বাতিল', 'Cancel')}</button><button type="button" id="alertConfirmBtn" class="flex-1 rounded-lg px-4 py-3 bg-red-600 font-bold text-white hover:bg-red-700 transition">${window.t('নিশ্চিত', 'Confirm')}</button>`; document.getElementById('alertCancelBtn').addEventListener('click', function() { resolveConfirm(false); }); document.getElementById('alertConfirmBtn').addEventListener('click', function() { resolveConfirm(true); }); } else { btnContainer.innerHTML = `<button type="button" id="alertOkBtn" class="w-full rounded-lg px-4 py-3 bg-brand font-bold text-white transition">OK</button>`; document.getElementById('alertOkBtn').addEventListener('click', closeAlert); }
+            modal.classList.remove('hidden');
+        }
+
+        window.showConfirm = function(title, message) { return new Promise(resolve => { confirmActionResolver = resolve; showAlert('confirm', title, message); }); }
+        function resolveConfirm(res) { closeAlert(); if(confirmActionResolver) confirmActionResolver(res); }
+        function closeAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+        window.openImageModal = function(src) { document.getElementById('fullSizeImage').src = src; document.getElementById('imageModal').classList.remove('hidden'); }
+        window.closeImageModal = function() { document.getElementById('imageModal').classList.add('hidden'); }
+
+        document.getElementById('submitBtn').addEventListener('click', async function(e) {
+            e.preventDefault(); const btnText = document.getElementById('submitBtnText'); const type = coinTypeInput.value; const amount = parseFloat(coinAmountInput.value); const method = document.getElementById('paymentMethod').value; const account = document.getElementById('accountNumber').value; const telegramUser = document.getElementById('telegramUsername').value; 
+            
+            if (!type) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে উপরের বক্স থেকে কয়েন নির্বাচন করুন।', 'Please select a coin from the list above.'));
+            if (!amount || isNaN(amount)) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে কত কয়েন সেল করবেন তা লিখুন।', 'Please enter the coin amount.'));
+            if (!method) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে পেমেন্ট মাধ্যম সিলেক্ট করুন।', 'Please select a payment method.'));
+            if (!account) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে আপনার অ্যাকাউন্ট নাম্বার/UID দিন।', 'Please enter your account number/UID.'));
+            
+            if (globalSettings.tgRequired && !telegramUser) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে আপনার টেলিগ্রাম ইউজারনেম দিন।', 'Please enter your Telegram username.'));
+            if (!uploadedImageBase64) return showAlert('error', window.t('ভুল', 'Error'), window.t('দয়া করে স্ক্রিনশট আপলোড করুন।', 'Please upload a screenshot.'));
+
+            let minLimit = globalSettings.limits?.min || 1; let maxLimit = globalSettings.limits?.max || 100;
+            if(amount < minLimit || amount > maxLimit) return showAlert('error', window.t('লিমিট এরর!', 'Limit Error!'), window.t(`দয়া করে ${minLimit}k থেকে ${maxLimit}k এর মধ্যে কয়েন দিন। এর কম বা বেশি সেল করা যাবে না।`, `Please enter coins between ${minLimit}k to ${maxLimit}k.`));
+
+            if (!currentUser) return showAlert('error', window.t('ডাটাবেস এরর', 'Database Error'), window.t('ডাটাবেসের সাথে কানেকশন নেই। একটু পর চেষ্টা করুন।', 'Not connected to database. Try again later.'));
+
+            btnText.innerHTML = window.t('পাঠানো হচ্ছে...', 'Sending...'); document.getElementById('submitBtn').disabled = true;
+
+            try {
+                let finalTotalTk = parseFloat(coinRateInput.value) * amount;
+                
+                const reqRef = doc(collection(db, 'artifacts', appId, 'public', 'data', 'requests'));
+                await setDoc(reqRef, {
+                    createdAt: Date.now(),
+                    date: new Date().toLocaleString(currentLang === 'en' ? 'en-US' : 'bn-BD'),
+                    type: type, amount: amount, total: finalTotalTk % 1 !== 0 ? finalTotalTk.toFixed(2) : finalTotalTk,
+                    method: method, account: account, telegramUser: telegramUser || '',
+                    image: uploadedImageBase64, status: 'pending', adminNote: '', archived: false
+                });
+
+                localStorage.setItem('userPhone', account);
+                
+                coinTypeInput.value = ''; coinAmountInput.value = ''; document.getElementById('paymentMethod').value = ''; document.getElementById('accountNumber').value = ''; document.getElementById('proofImage').value = ''; document.getElementById('telegramUsername').value = ''; activeCoinId = null; calculatorDisplay.classList.add('hidden'); uploadedImageBase64 = null; document.getElementById('uploadIcon').className = 'fa-solid fa-image text-4xl text-brand mb-2 pointer-events-none'; document.getElementById('fileNameDisplay').classList.add('hidden'); document.getElementById('step4-initial').classList.remove('hidden'); document.getElementById('transfer-section').classList.add('hidden');
+                document.querySelectorAll('.coin-btn').forEach(b => { b.className = 'coin-btn relative py-5 px-2 rounded-3xl transition-all font-bold text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 border-brand-light dark:border-gray-600 bg-white dark:bg-gray-800 border-2 hover:border-brand hover:shadow-lg'; });
+
+                if (typeof confetti === 'function') confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#4f46e5', '#10b981', '#f59e0b', '#e11d48'] });
+                showAlert('success', window.t('রিকোয়েস্ট সফল হয়েছে!', 'Request Successful!'), window.t('আপনার ফর্মটি সফলভাবে এডমিনের কাছে চলে গেছে।', 'Your form has been sent to the Admin successfully.'));
+                setTimeout(() => { document.getElementById('autoHistorySection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 1000);
+            } catch (err) { 
+                console.error(err);
+                showAlert('error', window.t('সমস্যা হয়েছে!', 'Error Occurred!'), window.t('রিকোয়েস্ট সাবমিট করা যাচ্ছে না। ডাটাবেস এরর।', 'Cannot submit request. Database error.')); 
+            } finally { btnText.innerHTML = window.t('রিকোয়েস্ট পাঠিয়ে দিন', 'Send Request'); document.getElementById('submitBtn').disabled = false; }
+        });
+
+        document.getElementById('clearHistoryBtn').addEventListener('click', async function(e) {
+            e.preventDefault(); if (!currentUser) return;
+            if(await window.showConfirm(window.t("ক্লিয়ার হিস্ট্রি", "Clear History"), window.t("সব হিস্ট্রি মুছে ফেলা হবে। নিশ্চিত?", "All history will be deleted. Are you sure?"))) {
+                const phone = localStorage.getItem('userPhone');
+                const myReqs = allRequests.filter(r => r.account === phone && r.status !== 'pending');
+                for (let r of myReqs) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', r.dbId));
+                }
+            }
+        });
+
+        window.promptDeleteUserHistory = function(dbId) { 
+            window.showConfirm(window.t("সতর্কতা", "Warning"), window.t("হিস্ট্রি ডিলিট করতে চান?", "Delete this history?")).then(async res => { 
+                if(res && currentUser) { 
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', dbId));
+                } 
+            }); 
+        }
+        
+        function renderUserHistory() {
+            const phone = localStorage.getItem('userPhone'), section = document.getElementById('autoHistorySection'), container = document.getElementById('autoHistoryContainer');
+            if (!phone || allRequests.length === 0) { section.classList.add('hidden'); return; }
+            const myReqs = allRequests.filter(r => r.account === phone); if (myReqs.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden'); container.innerHTML = '';
+
+            myReqs.forEach(req => {
+                let statusColor, statusIcon, messageHTML, deleteBtnHTML = '', proofBtnHTML = '';
+                if (req.status === 'paid') {
+                    
+                    let customSms = globalSettings.successSms || "SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।"; 
+                    let formattedSms = customSms.split('[account]').join(req.account).split('[amount]').join(req.total);
+                    
+                    statusColor = 'bg-green-50 border-green-400 dark:bg-green-900/30 dark:border-green-700'; statusIcon = `<i class="fa-solid fa-check-circle text-xl mr-2 text-green-600"></i> <span class="text-green-700 dark:text-green-400">${window.t('পেমেন্ট কমপ্লিট', 'Payment Complete')}</span>`; messageHTML = `<p class="text-green-700 dark:text-green-300 font-bold">${formattedSms}</p>`; deleteBtnHTML = `<button type="button" class="del-hist-btn text-gray-400 hover:text-red-600" onclick="promptDeleteUserHistory('${req.dbId}')"><i class="fa-solid fa-trash-can text-lg pointer-events-none"></i></button>`; if(req.adminProof) proofBtnHTML = `<button type="button" class="view-proof-btn mt-3 w-full bg-green-200 text-green-800 py-2 rounded-lg font-bold text-sm" onclick="openImageModal('${req.adminProof}')"><i class="fa-solid fa-file-invoice mr-2 pointer-events-none"></i>${window.t('পেমেন্ট প্রুফ দেখুন', 'View Payment Proof')}</button>`;
+                } else if (req.status === 'rejected') {
+                    statusColor = 'bg-red-50 border-red-400 dark:bg-red-900/30 dark:border-red-700'; statusIcon = `<i class="fa-solid fa-circle-xmark text-xl mr-2 text-red-600"></i> <span class="text-red-700 dark:text-red-400">${window.t('বাতিল', 'Rejected')}</span>`; messageHTML = `<p class="text-red-700 dark:text-red-300 font-bold">${window.t('এডমিন মেসেজ:', 'Admin Msg:')} ${req.rejectReason}</p>`; deleteBtnHTML = `<button type="button" class="del-hist-btn text-gray-400 hover:text-red-600" onclick="promptDeleteUserHistory('${req.dbId}')"><i class="fa-solid fa-trash-can text-lg pointer-events-none"></i></button>`;
+                } else {
+                    statusColor = 'bg-brand-light/30 border-brand-light dark:bg-brand-dark/30 dark:border-brand-dark'; statusIcon = `<i class="fa-solid fa-clock text-xl mr-2 text-brand animate-pulse"></i> <span class="text-brand dark:text-brand-light">${window.t('পেন্ডিং', 'Pending')}</span>`; messageHTML = `<p class="text-brand dark:text-brand-light font-medium">${window.t('রিকোয়েস্টটি এডমিন চেক করছেন।', 'Admin is reviewing your request.')}</p>`;
+                }
+                container.innerHTML += `<div class="border-2 p-5 rounded-xl shadow-sm ${statusColor} relative"><div class="flex justify-between border-b pb-3 mb-3 pr-6"><span class="font-bold flex">${statusIcon}</span><span class="text-xs font-bold text-gray-500 bg-white dark:bg-gray-800 px-2 py-1 rounded border dark:border-gray-600">${req.date}</span></div><div class="absolute top-4 right-4">${deleteBtnHTML}</div><div class="bg-white dark:bg-gray-800 p-4 rounded-lg font-bold flex justify-between mb-3 shadow-sm"><span class="text-xl">${req.amount}k ${req.type}</span><span class="text-2xl font-black">৳${req.total}</span></div><div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">${messageHTML}${proofBtnHTML}</div></div>`;
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('nsCoinTheme') === 'dark') document.documentElement.classList.add('dark');
+            const savedColor = localStorage.getItem('nsCoinThemeColor'); if(savedColor) changeTheme(savedColor);
+            updateThemeIcon(); if (currentLang) window.setLang(currentLang); 
+            
+            // প্রি-লোডার হাইড করার ফাংশন ডিলিট করে দেওয়া হয়েছে, তাই সরাসরি ইনিশিয়ালাইজ করবে।
+            const preloader = document.getElementById('app-preloader');
+            if(preloader) preloader.remove(); // লোডারটা HTML থেকে ডিলিট করে দিলাম
+            
+            initAuth(); 
+        });
+    </script>
+</body>
+</html>
+
