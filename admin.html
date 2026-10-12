@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Admin Panel | NS & Top Coin</title>
+    
+    <script>
+        if (localStorage.getItem('nsCoinTheme') === 'dark') { document.documentElement.classList.add('dark'); }
+        const savedColor = localStorage.getItem('nsCoinThemeColor');
+        if (savedColor) { document.documentElement.setAttribute('data-theme', savedColor); }
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { DEFAULT: 'var(--color-brand)', light: 'var(--color-brand-light)', dark: 'var(--color-brand-dark)', } } } }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        
+        html, body { overscroll-behavior: none; font-family: 'Hind Siliguri', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .tab-active { border-bottom: 4px solid var(--color-brand); color: var(--color-brand); font-weight: bold; border-radius: 4px 4px 0 0; background-color: rgba(79, 70, 229, 0.05); }
+        .dark .tab-active { background-color: rgba(79, 70, 229, 0.2); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        :root { --color-brand: #4f46e5; --color-brand-light: #e0e7ff; --color-brand-dark: #3730a3; }
+        [data-theme="rose"] { --color-brand: #e11d48; --color-brand-light: #ffe4e6; --color-brand-dark: #be123c; }
+        [data-theme="emerald"] { --color-brand: #10b981; --color-brand-light: #d1fae5; --color-brand-dark: #047857; }
+        [data-theme="amber"] { --color-brand: #f59e0b; --color-brand-light: #fef3c7; --color-brand-dark: #b45309; }
+        [data-theme="purple"] { --color-brand: #a855f7; --color-brand-light: #f3e8ff; --color-brand-dark: #7e22ce; }
+        [data-theme="cyan"] { --color-brand: #06b6d4; --color-brand-light: #cffafe; --color-brand-dark: #0e7490; }
+        [data-theme="slate"] { --color-brand: #64748b; --color-brand-light: #f1f5f9; --color-brand-dark: #334155; }
+
+        #admin-preloader { position: fixed; inset: 0; background-color: #f3f4f6; z-index: 999999; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: opacity 0.3s ease, visibility 0.3s ease; }
+        html.dark #admin-preloader { background-color: #111827; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #e0e7ff; border-top-color: #4f46e5; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        html.dark .spinner { border-color: #374151; border-top-color: #818cf8; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .preloader-text { font-family: 'Hind Siliguri', sans-serif; font-size: 18px; font-weight: bold; color: #4f46e5; letter-spacing: 1px; }
+        html.dark .preloader-text { color: #818cf8; }
+    </style>
+</head>
+<body class="text-gray-800 bg-gray-100 dark:bg-gray-900 dark:text-gray-200 antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <div id="admin-preloader">
+        <div class="spinner"></div>
+        <div class="preloader-text">লোড হচ্ছে...</div>
+    </div>
+
+    <nav class="bg-brand dark:bg-brand-dark text-white shadow-lg sticky top-0 z-40 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center py-2 sm:h-16 gap-2">
+                <div class="flex items-center select-none">
+                    <span class="font-bold text-xl tracking-wide pointer-events-none"><span class="lang-str" data-bn="অ্যাডমিন প্যানেল" data-en="Admin Panel">অ্যাডমিন প্যানেল</span></span>
+                </div>
+                
+                <div class="flex items-center gap-3 sm:gap-4 bg-white/20 px-3 sm:px-4 py-1.5 rounded-full backdrop-blur-sm">
+                    <button type="button" id="langToggleBtn" onclick="toggleLang()" class="font-bold text-sm bg-white/30 text-white rounded px-2 py-0.5 hover:bg-white/50 transition border border-white/40 shadow-sm">EN</button>
+                    <div class="flex gap-2 border-l border-r border-white/30 px-3">
+                        <button type="button" id="cycleThemeBtn" class="p-1 hover:scale-110 transition" title="Theme">
+                            <i class="fa-solid fa-palette text-xl text-white pointer-events-none"></i>
+                        </button>
+                    </div>
+                    <button type="button" id="toggleDarkModeBtn" class="p-1 hover:scale-110 transition" title="Dark Mode">
+                        <i id="themeIcon" class="fa-solid fa-moon text-xl text-yellow-300 pointer-events-none"></i>
+                    </button>
+                    <button id="soundToggleBtn" onclick="toggleSound()" class="p-1 hover:scale-110 transition border-l border-white/30 pl-3" title="Sound">
+                        <i class="fa-solid fa-bell text-lg text-green-300"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div id="mainContentArea" class="flex-grow w-full relative">
+        <div id="adminDashboardView" class="w-full pb-12">
+            <div class="bg-white dark:bg-gray-800 shadow mb-6 border-b dark:border-gray-700 sticky top-[52px] z-30">
+                <div class="max-w-7xl mx-auto px-4">
+                    <div class="flex space-x-2 md:space-x-6 overflow-x-auto no-scrollbar">
+                        <button onclick="switchAdminTab('pending')" id="tab-pending" class="py-4 px-2 text-gray-600 dark:text-gray-300 hover:text-brand font-bold whitespace-nowrap tab-active transition flex items-center relative text-sm md:text-base">
+                            <i class="fa-solid fa-clock mr-2"></i> <span class="lang-str" data-bn="পেন্ডিং" data-en="Pending">পেন্ডিং</span> <span id="pendingBadge" class="ml-2 bg-red-600 text-white text-xs font-bold px-2 py-0.5 rounded-full hidden">0</span>
+                        </button>
+                        <button onclick="switchAdminTab('history')" id="tab-history" class="py-4 px-2 text-gray-600 dark:text-gray-300 hover:text-brand font-bold whitespace-nowrap transition flex items-center text-sm md:text-base">
+                            <i class="fa-solid fa-clock-rotate-left mr-2"></i> <span class="lang-str" data-bn="হিস্ট্রি" data-en="History">হিস্ট্রি</span>
+                        </button>
+                        <button onclick="switchAdminTab('archive')" id="tab-archive" class="py-4 px-2 text-gray-600 dark:text-gray-300 hover:text-brand font-bold whitespace-nowrap transition flex items-center text-sm md:text-base">
+                            <i class="fa-solid fa-box-archive mr-2"></i> <span class="lang-str" data-bn="আর্কাইভ" data-en="Archive">আর্কাইভ</span>
+                        </button>
+                        <button onclick="switchAdminTab('settings')" id="tab-settings" class="py-4 px-2 text-gray-600 dark:text-gray-300 hover:text-brand font-bold whitespace-nowrap transition flex items-center text-sm md:text-base">
+                            <i class="fa-solid fa-gear mr-2"></i> <span class="lang-str" data-bn="সেটিংস" data-en="Settings">সেটিংস</span>
+                        </button>
+                        <button onclick="goToUserSite()" class="py-4 px-2 text-blue-500 hover:text-blue-700 font-bold whitespace-nowrap transition flex items-center text-sm md:text-base ml-auto border-l border-gray-200 dark:border-gray-700 pl-4">
+                            <i class="fa-solid fa-globe mr-2"></i> <span class="lang-str" data-bn="সাইটে যান" data-en="Go to Site">সাইটে যান</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="max-w-7xl mx-auto px-4">
+                <!-- DASHBOARD (Pending) -->
+                <section id="sec-pending">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-bold text-gray-700 dark:text-gray-300"><i class="fa-solid fa-chart-pie mr-2 text-brand"></i> <span class="lang-str" data-bn="বর্তমান হিসাব নিকাশ" data-en="Current Stats">বর্তমান হিসাব নিকাশ</span></h3>
+                        <button onclick="handleResetStats()" class="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-200 px-3 py-1.5 rounded font-bold text-sm transition shadow-sm border border-red-200 dark:border-red-800 flex items-center">
+                            <i class="fa-solid fa-rotate-right mr-1"></i> <span class="lang-str" data-bn="হিসাব রিসেট" data-en="Reset Stats">হিসাব রিসেট</span>
+                        </button>
+                    </div>
+                    
+                    <div class="bg-gradient-to-r from-green-500 to-emerald-600 p-6 rounded-xl shadow-lg mb-6 text-white flex justify-between items-center">
+                        <div>
+                            <p class="text-sm font-bold text-green-100 mb-1 uppercase tracking-wider"><span class="lang-str" data-bn="সর্বমোট পেমেন্ট" data-en="Total Payment">সর্বমোট পেমেন্ট</span></p>
+                            <h2 class="text-3xl sm:text-4xl font-black" id="stat-total-paid">৳0</h2>
+                        </div>
+                        <i class="fa-solid fa-money-bill-trend-up text-5xl text-green-200/50"></i>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                        <div class="bg-white dark:bg-gray-800 p-5 rounded-xl border-l-4 border-yellow-500 shadow-sm flex items-center justify-between">
+                            <div><p class="text-xs font-bold text-gray-500 dark:text-gray-400"><span class="lang-str" data-bn="মোট পেন্ডিং রিকোয়েস্ট" data-en="Total Pending">মোট পেন্ডিং রিকোয়েস্ট</span></p><h3 class="text-2xl font-black text-gray-800 dark:text-white" id="stat-pending">0</h3></div>
+                            <i class="fa-solid fa-clock text-3xl text-yellow-200 dark:text-yellow-900/50"></i>
+                        </div>
+                    </div>
+
+                    <h4 class="font-bold text-gray-600 dark:text-gray-400 mb-3 text-sm border-b dark:border-gray-700 pb-2"><i class="fa-solid fa-layer-group mr-2"></i> <span class="lang-str" data-bn="কয়েন ভিত্তিক হিসাব (পেইড)" data-en="Coin Based Stats (Paid)">কয়েন ভিত্তিক হিসাব (পেইড)</span></h4>
+                    <div id="dynamic-stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6"></div>
+
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border dark:border-gray-700 mt-6">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="তারিখ ও সময়" data-en="Date & Time">তারিখ ও সময়</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="কয়েন ইনফো" data-en="Coin Info">কয়েন ইনফো</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="পেমেন্ট মেথড ও যোগাযোগ" data-en="Payment Method & Contact">পেমেন্ট মেথড ও যোগাযোগ</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase w-48"><span class="lang-str" data-bn="নোট 📝" data-en="Note 📝">নোট 📝</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="ছবি" data-en="Image">ছবি</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="অ্যাকশন" data-en="Action">অ্যাকশন</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="pendingTableBody" class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- History Section -->
+                <section id="sec-history" class="hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="deleteAllHistory()" class="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-200 px-4 py-2 rounded-lg font-bold shadow-sm transition border border-red-300 dark:border-red-800 flex items-center whitespace-nowrap text-sm">
+                                <i class="fa-solid fa-trash-can mr-2"></i> <span class="lang-str" data-bn="সব হিস্ট্রি ডিলিট করুন" data-en="Delete All History">সব হিস্ট্রি ডিলিট করুন</span>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <div class="relative flex-grow md:w-64">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-gray-400"></i>
+                                <input type="text" id="searchHistory" onkeyup="filterTable('historyTableBody', 'searchHistory')" class="lang-placeholder pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 rounded-lg focus:ring-brand focus:border-brand w-full font-bold" data-bn="নাম্বার খুঁজুন..." data-en="Search number..." placeholder="নাম্বার খুঁজুন...">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border dark:border-gray-700">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="সময়" data-en="Time">সময়</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="ডিটেইলস" data-en="Details">ডিটেইলস</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="নোট" data-en="Note">নোট</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="প্রুফ" data-en="Proof">প্রুফ</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="স্ট্যাটাস" data-en="Status">স্ট্যাটাস</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="ডিলিট" data-en="Delete">ডিলিট</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyTableBody" class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Archive Section -->
+                <section id="sec-archive" class="hidden">
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+                        <div class="bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 p-3 rounded-lg text-sm font-bold text-yellow-800 dark:text-yellow-400">
+                            <i class="fa-solid fa-lock mr-1"></i> <span class="lang-str" data-bn="এই ডাটাগুলো পারমানেন্টলি সেভ করা। ড্যাশবোর্ড রিসেট করলেও এগুলো মুছবে ওয়েবসাইটে যুক্ত থাকবে।" data-en="These records are saved permanently. They won't be deleted even if you reset stats.">এই ডাটাগুলো পারমানেন্টলি সেভ করা। ড্যাশবোর্ড রিসেট করলেও এগুলো মুছবে না।</span>
+                        </div>
+                        <div class="flex gap-2 w-full md:w-auto">
+                            <button onclick="clearArchive()" class="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 hover:bg-red-200 px-4 py-1.5 rounded-lg font-bold shadow-sm transition border border-red-300 dark:border-red-800 flex items-center whitespace-nowrap text-sm">
+                                <i class="fa-solid fa-trash mr-2"></i> <span class="lang-str" data-bn="আর্কাইভ মুছুন" data-en="Clear Archive">আর্কাইভ মুছুন</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden border dark:border-gray-700">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                <thead class="bg-gray-50 dark:bg-gray-900">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="তারিখ" data-en="Date">তারিখ</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="ডিটেইলস" data-en="Details">ডিটেইলস</span></th>
+                                        <th class="px-4 py-3 text-left text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="নোট" data-en="Note">নোট</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="প্রুফ" data-en="Proof">প্রুফ</span></th>
+                                        <th class="px-4 py-3 text-center text-xs font-bold text-gray-500 uppercase"><span class="lang-str" data-bn="স্ট্যাটাস" data-en="Status">স্ট্যাটাস</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="archiveTableBody" class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Settings Section -->
+                <section id="sec-settings" class="hidden max-w-5xl mx-auto space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white border-b dark:border-gray-700 pb-3"><i class="fa-solid fa-sliders text-brand mr-2"></i> <span class="lang-str" data-bn="ওয়েবসাইট কন্ট্রোল প্যানেল" data-en="Website Control Panel">ওয়েবসাইট কন্ট্রোল প্যানেল</span></h2>
+                        
+                    <!-- Site Info Block -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-4"><i class="fa-solid fa-globe text-brand mr-2"></i> <span class="lang-str" data-bn="সাধারণ সেটিংস" data-en="General Settings">সাধারণ সেটিংস</span></h3>
+                        
+                        <div class="flex flex-col md:flex-row gap-6 mb-5">
+                            <div class="flex-grow">
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"><span class="lang-str" data-bn="ওয়েবসাইটের নাম পরিবর্তন করুন:" data-en="Change Website Name:">ওয়েবসাইটের নাম পরিবর্তন করুন:</span></label>
+                                <input type="text" id="setSiteName" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-4 py-2 font-bold focus:border-brand" placeholder="NS & Top Coin">
+                            </div>
+                            <div class="w-full md:w-48 shrink-0">
+                                <label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-2"><span class="lang-str" data-bn="ওয়েবসাইট লোগো:" data-en="Website Logo:">ওয়েবসাইট লোগো:</span></label>
+                                <label class="flex flex-col items-center justify-center w-full h-[42px] border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition overflow-hidden relative">
+                                    <div class="flex items-center justify-center space-x-2" id="siteLogoPreviewContainer">
+                                        <i class="fa-solid fa-image text-gray-400"></i>
+                                        <span class="text-xs font-bold text-gray-500 dark:text-gray-400"><span class="lang-str" data-bn="লোগো আপলোড" data-en="Upload Logo">লোগো আপলোড</span></span>
+                                    </div>
+                                    <input type="file" id="siteLogoInput" accept="image/*" class="hidden">
+                                </label>
+                                <button type="button" onclick="removeSiteLogo()" class="text-xs text-red-500 hover:text-red-700 mt-1 font-bold w-full text-right hidden" id="removeSiteLogoBtn"><i class="fa-solid fa-trash-can mr-1"></i><span class="lang-str" data-bn="রিমুভ" data-en="Remove">রিমুভ</span></button>
+                            </div>
+                        </div>
+
+                        <label class="flex items-center space-x-3 cursor-pointer mb-2">
+                            <input type="checkbox" id="setTgRequired" class="w-5 h-5 text-brand rounded">
+                            <span class="font-bold text-gray-800 dark:text-gray-200"><span class="lang-str" data-bn="টেলিগ্রাম ইউজারনেম দেওয়া বাধ্যতামূলক করুন" data-en="Make Telegram Username Mandatory">টেলিগ্রাম ইউজারনেম দেওয়া বাধ্যতামূলক করুন</span></span>
+                        </label>
+
+                        <label class="flex items-center space-x-3 cursor-pointer mb-3">
+                            <input type="checkbox" id="setNoticeActive" class="w-5 h-5 text-brand rounded">
+                            <span class="font-bold text-gray-800 dark:text-gray-200"><span class="lang-str" data-bn="ইউজারদের জন্য নোটিশ অন করুন" data-en="Enable Notice for Users">ইউজারদের জন্য নোটিশ অন করুন</span></span>
+                        </label>
+                        
+                        <textarea id="setNoticeText" rows="2" class="lang-placeholder w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-4 py-2 font-medium mb-4" data-bn="নোটিশ লিখুন" data-en="Write Notice" placeholder="নোটিশ লিখুন"></textarea>
+                        
+                        <button onclick="saveSiteInfo()" class="w-full sm:w-auto px-6 py-2 bg-brand text-white font-bold rounded-lg hover:bg-brand-dark transition shadow"><i class="fa-solid fa-save mr-2"></i><span class="lang-str" data-bn="সাইট ইনফো সেভ করুন" data-en="Save Site Info">সাইট ইনফো সেভ করুন</span></button>
+                    </div>
+
+                    <!-- Limits Block -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-yellow-600 dark:text-yellow-500 mb-4"><i class="fa-solid fa-scale-balanced mr-2"></i> <span class="lang-str" data-bn="কয়েন সেলের লিমিট (Min/Max)" data-en="Coin Sale Limits (Min/Max)">কয়েন সেলের লিমিট (Min/Max)</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            <div><label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1"><span class="lang-str" data-bn="সর্বনিম্ন সেল (Min k):" data-en="Minimum Sell (Min k):">সর্বনিম্ন সেল (Min k):</span></label><input type="number" id="setMinLimit" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-4 py-2 font-bold focus:border-yellow-500"></div>
+                            <div><label class="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1"><span class="lang-str" data-bn="সর্বোচ্চ সেল (Max k):" data-en="Maximum Sell (Max k):">সর্বোচ্চ সেল (Max k):</span></label><input type="number" id="setMaxLimit" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded px-4 py-2 font-bold focus:border-yellow-500"></div>
+                        </div>
+                        <button onclick="saveLimits()" class="w-full sm:w-auto px-6 py-2 bg-yellow-500 text-white font-bold rounded-lg hover:bg-yellow-600 transition shadow"><i class="fa-solid fa-save mr-2"></i> <span class="lang-str" data-bn="লিমিট সেভ করুন" data-en="Save Limits">লিমিট সেভ করুন</span></button>
+                    </div>
+
+                    <!-- Payment Methods Block -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-green-600 dark:text-green-500 mb-4"><i class="fa-solid fa-wallet mr-2"></i> <span class="lang-str" data-bn="পেমেন্ট মেথড অন/অফ" data-en="Payment Methods On/Off">পেমেন্ট মেথড অন/অফ</span></h3>
+                        <div class="flex flex-wrap gap-4 mb-4">
+                            <label class="flex items-center space-x-2 cursor-pointer bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition"><input type="checkbox" id="payBkash" class="w-5 h-5 text-brand rounded"> <span class="font-bold text-pink-600">bKash</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition"><input type="checkbox" id="payNagad" class="w-5 h-5 text-brand rounded"> <span class="font-bold text-orange-500">Nagad</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition"><input type="checkbox" id="payRocket" class="w-5 h-5 text-brand rounded"> <span class="font-bold text-purple-600">Rocket</span></label>
+                            <label class="flex items-center space-x-2 cursor-pointer bg-gray-50 dark:bg-gray-700 px-4 py-2 rounded border dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition"><input type="checkbox" id="payBinance" class="w-5 h-5 text-brand rounded"> <span class="font-bold text-yellow-500">Binance</span></label>
+                        </div>
+                        <button onclick="savePaymentMethods()" class="w-full sm:w-auto px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow"><i class="fa-solid fa-save mr-2"></i> <span class="lang-str" data-bn="মেথড সেভ করুন" data-en="Save Methods">মেথড সেভ করুন</span></button>
+                    </div>
+
+                    <!-- Support Links Block -->
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md border dark:border-gray-700">
+                        <h3 class="text-lg font-bold text-blue-600 dark:text-blue-500 mb-4"><i class="fa-solid fa-headset mr-2"></i> <span class="lang-str" data-bn="সাপোর্ট লিংক" data-en="Support Links">সাপোর্ট লিংক</span></h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1"><i class="fa-brands fa-whatsapp text-green-500"></i> Support WhatsApp:</label><input type="text" id="linkWa" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm font-medium" placeholder="017..."></div>
+                            <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1"><i class="fa-brands fa-telegram text-blue-400"></i> Support Telegram:</label><input type="text" id="linkTg" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm font-medium" placeholder="@username"></div>
+                            <div><label class="block text-xs font-bold text-gray-600 dark:text-gray-400 mb-1"><i class="fa-brands fa-facebook text-blue-600"></i> Support Facebook:</label><input type="text" id="linkFb" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 text-sm font-medium" placeholder="https://facebook.com/..."></div>
+                        </div>
+                        <button onclick="saveSupportLinks()" class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition shadow"><i class="fa-solid fa-save mr-2"></i> <span class="lang-str" data-bn="লিংকগুলো সেভ করুন" data-en="Save Links">লিংকগুলো সেভ করুন</span></button>
+                    </div>
+
+                    <!-- System State Block -->
+                    <div class="bg-red-50 dark:bg-red-900/10 p-6 rounded-xl shadow-md border border-red-200 dark:border-red-800">
+                        <h3 class="text-lg font-bold text-red-600 dark:text-red-400 mb-4"><i class="fa-solid fa-power-off mr-2"></i> <span class="lang-str" data-bn="ওয়েবসাইট অন/অফ" data-en="Website On/Off">ওয়েবসাইট অন/অফ</span></h3>
+                        <label class="flex items-center space-x-3 cursor-pointer mb-3"><input type="checkbox" id="setSystemActive" class="w-6 h-6 text-red-600 rounded"><span class="font-black text-red-700 dark:text-red-400 text-lg"><span class="lang-str" data-bn="কয়েন কেনা-বেচা চালু আছে?" data-en="Coin trading active?">কয়েন কেনা-বেচা চালু আছে?</span></span></label>
+                        <textarea id="setStopMsg" rows="2" class="lang-placeholder w-full border-2 border-red-300 dark:border-red-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2 font-medium mb-4" data-bn="বন্ধ থাকলে মেসেজ লিখুন" data-en="If closed, write message" placeholder="বন্ধ থাকলে মেসেজ লিখুন"></textarea>
+                        <button onclick="saveSystemStatus()" class="w-full sm:w-auto px-6 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition shadow"><i class="fa-solid fa-save mr-2"></i> <span class="lang-str" data-bn="স্ট্যাটাস সেভ করুন" data-en="Save Status">স্ট্যাটাস সেভ করুন</span></button>
+                    </div>
+                    
+                    <!-- Success SMS Template Block -->
+                    <div class="bg-green-50 dark:bg-green-900/10 p-6 rounded-xl shadow-md border border-green-200 dark:border-green-800 mt-6">
+                        <h3 class="text-lg font-bold text-green-700 dark:text-green-400 mb-4"><i class="fa-solid fa-comment-sms mr-2"></i> <span class="lang-str" data-bn="পেমেন্ট সাকসেস মেসেজ" data-en="Payment Success Message">পেমেন্ট সাকসেস মেসেজ</span></h3>
+                        <p class="text-sm font-bold text-gray-600 dark:text-gray-400 mb-2"><span class="lang-str" data-bn="পেমেন্ট কমপ্লিট হলে ইউজার এই মেসেজটি দেখবে। ইউজারের নাম্বার ও টাকার পরিমাণ ডায়নামিক করতে নিচের কোডগুলো ব্যবহার করুন:" data-en="User will see this message when payment is complete. Use these tags for dynamic values:">পেমেন্ট কমপ্লিট হলে ইউজার এই মেসেজটি দেখবে। ইউজারের নাম্বার ও টাকার পরিমাণ ডায়নামিক করতে নিচের কোডগুলো ব্যবহার করুন:</span></p>
+                        <ul class="list-disc list-inside text-sm text-gray-700 dark:text-gray-300 mb-3 ml-2 font-mono"><li>[account] <span class="font-sans text-gray-500">=> ইউজারের নাম্বার / UID</span></li><li>[amount] <span class="font-sans text-gray-500">=> পেমেন্টের পরিমাণ</span></li></ul>
+                        <textarea id="setSuccessSms" rows="3" class="lang-placeholder w-full border-2 border-green-300 dark:border-green-600 dark:bg-gray-800 dark:text-white rounded-lg px-4 py-2 font-medium mb-4 focus:ring-green-500 focus:border-green-500" data-bn="যেমন: SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।" data-en="E.g: SMS: ৳[amount] sent to your [account] number." placeholder="যেমন: SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।"></textarea>
+                        <button onclick="saveSuccessSms()" class="w-full sm:w-auto px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition shadow"><i class="fa-solid fa-save mr-2"></i> <span class="lang-str" data-bn="মেসেজ সেভ করুন" data-en="Save Message">মেসেজ সেভ করুন</span></button>
+                    </div>
+
+                    <!-- Coin Management Block -->
+                    <div class="bg-brand-light/30 dark:bg-brand-dark/20 p-6 rounded-xl shadow-md border border-brand-light dark:border-brand-dark">
+                        <h3 class="text-lg font-bold text-brand dark:text-brand-light mb-4"><i class="fa-solid fa-coins mr-2"></i> <span class="lang-str" data-bn="কয়েন ম্যানেজমেন্ট (যুক্ত/ডিলিট)" data-en="Coin Management (Add/Delete)">কয়েন ম্যানেজমেন্ট (যুক্ত/ডিলিট/এডিট)</span></h3>
+                        <div id="adminCoinList" class="space-y-3 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-600 shadow-sm">
+                            <h4 class="font-bold text-gray-700 dark:text-gray-300 mb-3 border-b dark:border-gray-600 pb-2"><span class="lang-str" data-bn="নতুন কয়েন যুক্ত করুন:" data-en="Add New Coin:">নতুন কয়েন যুক্ত করুন:</span></h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"><span class="lang-str" data-bn="কয়েনের নাম" data-en="Coin Name">কয়েনের নাম</span></label><input type="text" id="newCoinName" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 font-medium"></div>
+                                
+                                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"><span class="lang-str" data-bn="1k রেট (টাকা)" data-en="1k Rate (Tk)">1k রেট (টাকা)</span></label><input type="number" id="newCoinRate" step="0.01" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 font-medium"></div>
+                                
+                                <div><label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"><span class="lang-str" data-bn="গেম ইউজারনেম" data-en="Game Username">গেম ইউজারনেম</span></label><input type="text" id="newCoinUsername" class="w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg px-3 py-2 font-medium" placeholder=""></div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-500 dark:text-gray-400 mb-1"><span class="lang-str" data-bn="কয়েন লোগো (ঐচ্ছিক)" data-en="Coin Logo (Optional)">কয়েন লোগো (ঐচ্ছিক)</span></label>
+                                    <label class="flex flex-col items-center justify-center w-full h-[42px] border-2 border-gray-300 dark:border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 transition overflow-hidden">
+                                        <div class="flex items-center justify-center space-x-2" id="newCoinLogoPreviewContainer"><i class="fa-solid fa-image text-gray-400" id="newCoinLogoIcon"></i><span class="text-xs font-bold text-gray-500 dark:text-gray-400" id="newCoinLogoText"><span class="lang-str" data-bn="আপলোড" data-en="Upload">আপলোড</span></span></div>
+                                        <input type="file" id="newCoinLogo" accept="image/*" class="hidden">
+                                    </label>
+                                </div>
+                            </div>
+                            <button onclick="handleAddNewCoin()" class="w-full sm:w-auto px-6 py-2 bg-brand text-white font-bold rounded-lg hover:bg-brand-dark transition shadow"><i class="fa-solid fa-plus mr-2"></i> <span class="lang-str" data-bn="অ্যাড করুন" data-en="Add">অ্যাড করুন</span></button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-[70] p-4 transition-opacity">
+        <button type="button" onclick="closeImageModal()" class="absolute top-6 right-6 text-white bg-red-600 rounded-full w-12 h-12 flex items-center justify-center text-2xl z-50 hover:scale-110 shadow-lg transition"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+        <div class="w-full h-full flex justify-center items-center p-4"><img id="fullSizeImage" src="" class="max-w-full max-h-full object-contain rounded shadow-2xl"></div>
+    </div>
+
+    <!-- Admin Confirm Modal -->
+    <div id="adminConfirmModal" class="fixed inset-0 bg-gray-900 bg-opacity-80 hidden flex justify-center items-center z-[80] p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-sm shadow-2xl text-center border dark:border-gray-700">
+            <h3 id="adminConfirmTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-2"></h3>
+            <p id="adminConfirmMessage" class="text-gray-600 dark:text-gray-300 font-medium mb-6"></p>
+            <div id="adminConfirmBtns" class="flex justify-center gap-3"></div>
+        </div>
+    </div>
+
+    <!-- Approve Modal -->
+    <div id="approveModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden flex justify-center items-center z-[80] p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl border dark:border-gray-700">
+            <h3 class="text-xl font-bold text-green-700 dark:text-green-400 mb-4 border-b dark:border-gray-700 pb-2"><i class="fa-solid fa-check-circle mr-2"></i> <span class="lang-str" data-bn="পেমেন্ট কনফার্ম" data-en="Confirm Payment">পেমেন্ট কনফার্ম</span></h3>
+            <p class="text-gray-600 dark:text-gray-300 font-medium mb-4"><span class="lang-str" data-bn="ট্রানজেকশনের একটি স্ক্রিনশট আপলোড করুন (ঐচ্ছিক)।" data-en="Upload a transaction screenshot (Optional).">ট্রানজেকশনের একটি স্ক্রিনশট আপলোড করুন (ঐচ্ছিক)।</span></p>
+            <input type="file" id="adminProofInput" accept="image/*" class="w-full border-2 border-dashed border-gray-300 dark:border-gray-600 p-4 rounded-lg mb-6 cursor-pointer bg-gray-50 dark:bg-gray-700 dark:text-white">
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeApproveModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 dark:text-white font-bold rounded"><span class="lang-str" data-bn="বাতিল" data-en="Cancel">বাতিল</span></button>
+                <button onclick="confirmApproval()" class="px-4 py-2 bg-green-600 text-white font-bold rounded"><span class="lang-str" data-bn="কনফার্ম করুন" data-en="Confirm">কনফার্ম করুন</span></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reject Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden flex justify-center items-center z-[80] p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md shadow-2xl border dark:border-gray-700">
+            <h3 class="text-xl font-bold text-red-600 dark:text-red-400 mb-4 border-b dark:border-gray-700 pb-2"><i class="fa-solid fa-ban mr-2"></i> <span class="lang-str" data-bn="বাতিল করুন" data-en="Reject">বাতিল করুন</span></h3>
+            <p class="text-gray-600 dark:text-gray-300 font-medium mb-2"><span class="lang-str" data-bn="কারণ লিখুন:" data-en="Enter Reason:">কারণ লিখুন:</span></p>
+            <textarea id="rejectReason" rows="3" class="lang-placeholder w-full border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-lg p-3 mb-6 focus:border-red-500" data-bn="যেমন: আপনি কয়েন পাঠাননি..." data-en="E.g: You didn't send coins..." placeholder="যেমন: আপনি কয়েন পাঠাননি..."></textarea>
+            <div class="flex justify-end space-x-3">
+                <button onclick="closeRejectModal()" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 dark:text-white font-bold rounded"><span class="lang-str" data-bn="ক্যান্সেল" data-en="Cancel">ক্যান্সেল</span></button>
+                <button onclick="confirmReject()" class="px-4 py-2 bg-red-600 text-white font-bold rounded"><span class="lang-str" data-bn="নিশ্চিত করুন" data-en="Confirm">নিশ্চিত করুন</span></button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATYpTioZRY612OywkjbNbaccKRhxDYaAg",
+            authDomain: "nscoinshop.firebaseapp.com",
+            projectId: "nscoinshop",
+            storageBucket: "nscoinshop.firebasestorage.app",
+            messagingSenderId: "497930950808",
+            appId: "1:497930950808:web:74ebbe981dd1b1797cd8ed",
+            measurementId: "G-YCCNPT5GQM"
+        };
+        let appId = 'ns-top-coin-app';
+        let customToken = null;
+
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+            appId = typeof __app_id !== 'undefined' ? __app_id : appId;
+            if (typeof __initial_auth_token !== 'undefined') customToken = __initial_auth_token;
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        let currentUser = null;
+
+        let currentLang = localStorage.getItem('nsCoin_lang') || 'bn';
+        window.t = function(bnStr, enStr) { return currentLang === 'en' ? enStr : bnStr; }
+        
+        let globalSettings = { siteName: 'NS & Top Coin', siteLogo: null, tgRequired: false, limits: {min: 1, max: 100}, support: {}, coins: [], methods: {bkash:true,nagad:true,rocket:true, binance:false}, systemActive: true, successSms: "SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।" };
+        
+        let cachedSet = localStorage.getItem('nsCoin_globalSettings');
+        if(cachedSet) { try { globalSettings = JSON.parse(cachedSet); } catch(e){} }
+
+        let allRequests = [];
+        let isSoundEnabled = true; let lastPendingCount = 0; let modalResolver = null; let currentApproveId = null; let currentRejectId = null; let newCoinUploadedLogo = null; let siteLogoBase64 = null;
+        const notificationSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        let isAdminInitialLoad = true;
+
+        async function initAuth() {
+            try {
+                if (customToken) {
+                    try { await signInWithCustomToken(auth, customToken); } 
+                    catch(e) { await signInAnonymously(auth); }
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUser = auth.currentUser;
+                startRealtimeListeners();
+            } catch (error) {
+                console.error("Auth error:", error);
+                adminCustomAlert('Database Error', 'ডাটাবেসের সাথে কানেক্ট করা যাচ্ছে না। দয়া করে ফায়ারবেস কনফিগ চেক করুন।');
+            }
+        }
+
+        function startRealtimeListeners() {
+            if (!currentUser) return;
+            
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            onSnapshot(settingsRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    globalSettings = docSnap.data();
+                    localStorage.setItem('nsCoin_globalSettings', JSON.stringify(globalSettings));
+                } else {
+                    setDoc(settingsRef, globalSettings);
+                }
+                updateSettingsUIAdmin();
+            }, (error) => console.error(error));
+
+            const requestsRef = collection(db, 'artifacts', appId, 'public', 'data', 'requests');
+            
+            // Check for cached requests to show instantly
+            let cachedReqs = localStorage.getItem('nsCoin_adminRequests');
+            if(cachedReqs) { 
+                try { 
+                    allRequests = JSON.parse(cachedReqs); 
+                    renderAdminTables(); 
+                } catch(e){} 
+            }
+
+            onSnapshot(requestsRef, (snapshot) => {
+                allRequests = [];
+                snapshot.forEach((doc) => {
+                    allRequests.push({ dbId: doc.id, ...doc.data() });
+                });
+                allRequests.sort((a, b) => b.createdAt - a.createdAt);
+                
+                // Cache the new data
+                localStorage.setItem('nsCoin_adminRequests', JSON.stringify(allRequests));
+                
+                let currentPending = allRequests.filter(r => r.status === 'pending').length;
+                if (!isAdminInitialLoad && currentPending > lastPendingCount && allRequests.length > 0 && isSoundEnabled) { 
+                    notificationSound.play().catch(e=>console.log('Audio error')); 
+                }
+                lastPendingCount = currentPending;
+                
+                renderAdminTables();
+
+                // Hide preloader once data arrives
+                if(isAdminInitialLoad) {
+                    const preloader = document.getElementById('admin-preloader');
+                    if(preloader) {
+                        preloader.style.opacity = '0';
+                        setTimeout(() => preloader.classList.add('hidden'), 300);
+                    }
+                    isAdminInitialLoad = false;
+                }
+            }, (error) => {
+                console.error(error);
+                if(isAdminInitialLoad) {
+                    const preloader = document.getElementById('admin-preloader');
+                    if(preloader) preloader.classList.add('hidden');
+                    isAdminInitialLoad = false;
+                }
+            });
+        }
+
+        window.setLang = function(langCode) {
+            currentLang = langCode; localStorage.setItem('nsCoin_lang', langCode);
+            document.getElementById('langToggleBtn').innerText = langCode === 'bn' ? 'EN' : 'BN';
+            document.querySelectorAll('.lang-str').forEach(el => { if(el.getAttribute('data-' + langCode)) el.innerHTML = el.getAttribute('data-' + langCode); });
+            document.querySelectorAll('.lang-placeholder').forEach(el => { if(el.getAttribute('data-' + langCode)) el.placeholder = el.getAttribute('data-' + langCode); });
+            renderAdminTables();
+        }
+        window.toggleLang = function() { window.setLang(currentLang === 'bn' ? 'en' : 'bn'); }
+
+        const themes = ['default', 'rose', 'emerald', 'amber', 'purple', 'cyan', 'slate'];
+        let currentThemeIndex = 0;
+        function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); localStorage.setItem('nsCoinThemeColor', themeName); currentThemeIndex = Math.max(0, themes.indexOf(themeName)); }
+        document.getElementById('cycleThemeBtn').addEventListener('click', e => { e.preventDefault(); currentThemeIndex = (currentThemeIndex + 1) % themes.length; changeTheme(themes[currentThemeIndex]); });
+        document.getElementById('toggleDarkModeBtn').addEventListener('click', e => { e.preventDefault(); document.documentElement.classList.toggle('dark'); localStorage.setItem('nsCoinTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); updateThemeIcon(); });
+        function updateThemeIcon() { document.getElementById('themeIcon').className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-xl text-yellow-400 pointer-events-none' : 'fa-solid fa-moon text-xl text-yellow-300 pointer-events-none'; }
+
+        window.goToUserSite = function() { window.location.href = 'index.html'; }
+        window.switchAdminTab = function(tab) {
+            ['pending', 'history', 'archive', 'settings'].forEach(t => { 
+                document.getElementById('sec-' + t).classList.add('hidden'); 
+                document.getElementById('tab-' + t).classList.remove('tab-active'); 
+            });
+            document.getElementById('sec-' + tab).classList.remove('hidden'); document.getElementById('tab-' + tab).classList.add('tab-active');
+        }
+
+        window.adminCustomAlert = function(title, msg) {
+            document.getElementById('adminConfirmTitle').innerText = title; document.getElementById('adminConfirmMessage').innerText = msg;
+            document.getElementById('adminConfirmBtns').innerHTML = `<button onclick="closeAdminConfirm()" class="w-full bg-brand text-white font-bold py-2 rounded-lg shadow transition">OK</button>`;
+            document.getElementById('adminConfirmModal').classList.remove('hidden');
+        }
+        window.closeAdminConfirm = function() { document.getElementById('adminConfirmModal').classList.add('hidden'); }
+        
+        window.adminCustomConfirm = function(title, msg) {
+            return new Promise(resolve => {
+                document.getElementById('adminConfirmTitle').innerText = title; document.getElementById('adminConfirmMessage').innerText = msg;
+                document.getElementById('adminConfirmBtns').innerHTML = `<button onclick="resolveAdminConfirm(false)" class="flex-1 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white font-bold py-2 rounded-lg transition">${window.t('বাতিল', 'Cancel')}</button><button onclick="resolveAdminConfirm(true)" class="flex-1 bg-red-600 text-white font-bold py-2 rounded-lg shadow transition">${window.t('নিশ্চিত', 'Confirm')}</button>`;
+                document.getElementById('adminConfirmModal').classList.remove('hidden'); modalResolver = resolve;
+            });
+        }
+        window.resolveAdminConfirm = function(res) { document.getElementById('adminConfirmModal').classList.add('hidden'); if(modalResolver) modalResolver(res); }
+
+        window.copyNumber = function(text) { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); document.body.removeChild(el); window.adminCustomAlert(window.t('সফল', 'Success'), window.t(`কপি করা হয়েছে:\n${text}`, `Copied:\n${text}`)); }
+        window.saveAdminNote = async function(dbId, noteText) { 
+            if (!currentUser) return;
+            const reqRef = doc(db, 'artifacts', appId, 'public', 'data', 'requests', dbId);
+            await updateDoc(reqRef, { adminNote: noteText });
+        }
+
+        window.handleResetStats = async function() {
+            if (!currentUser) return;
+            if(await window.adminCustomConfirm(window.t("সতর্কতা", "Warning"), window.t("আপনি কি ড্যাশবোর্ডের হিসাব জিরো (0) করতে চান?\nডাটাগুলো 'আর্কাইভ' ট্যাবে সেভ থাকবে।", "Reset dashboard stats to zero (0)?\nData will be moved to Archive."))) {
+                const toArchive = allRequests.filter(r => (r.status === 'paid' || r.status === 'rejected') && !r.archived);
+                for (let r of toArchive) {
+                    await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', r.dbId), { archived: true });
+                }
+                window.adminCustomAlert(window.t("সম্পন্ন", "Done"), window.t("হিসাব রিসেট সম্পন্ন হয়েছে।", "Stats reset successful."));
+            }
+        }
+
+        window.deleteAllHistory = async function() {
+            if (!currentUser) return;
+            const historyReqs = allRequests.filter(r => (r.status === 'paid' || r.status === 'rejected') && !r.archived);
+            if(historyReqs.length === 0) return;
+            if(await window.adminCustomConfirm(window.t("সতর্কতা!", "Warning!"), window.t("সব হিস্ট্রি ডাটা চিরতরে মুছে যাবে। আপনি কি নিশ্চিত?", "All history data will be permanently deleted. Are you sure?"))) {
+                for (let r of historyReqs) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', r.dbId));
+                }
+                window.adminCustomAlert(window.t("সম্পন্ন", "Done"), window.t("সব হিস্ট্রি সফলভাবে মুছে ফেলা হয়েছে।", "All history cleared successfully."));
+            }
+        }
+        
+        window.clearArchive = async function() {
+            if (!currentUser) return;
+            if(await window.adminCustomConfirm(window.t("চূড়ান্ত সতর্কতা!", "Final Warning!"), window.t("আর্কাইভের সব ডাটা এবং স্ক্রিনশট চিরতরে মুছে যাবে। আপনি কি নিশ্চিত?", "All archive data and screenshots will be permanently deleted. Are you sure?"))) {
+                const toDelete = allRequests.filter(r => r.archived);
+                for (let r of toDelete) {
+                    await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', r.dbId));
+                }
+                window.adminCustomAlert(window.t("সম্পন্ন", "Done"), window.t("আর্কাইভ সফলভাবে মুছে ফেলা হয়েছে এবং মেমোরি খালি করা হয়েছে।", "Archive cleared successfully."));
+            }
+        }
+
+        function renderAdminTables() {
+            const pBody = document.getElementById('pendingTableBody'), hBody = document.getElementById('historyTableBody'), aBody = document.getElementById('archiveTableBody');
+            pBody.innerHTML = hBody.innerHTML = aBody.innerHTML = '';
+            let pendingCount = 0; let totalPaidTkAll = 0; let coinStats = {};
+            if (globalSettings.coins) globalSettings.coins.forEach(c => { coinStats[c.name] = { totalTk: 0, totalCoins: 0 }; });
+
+            allRequests.forEach(req => {
+                let statusBadge = '';
+                if(req.status === 'paid') statusBadge = `<span class="bg-green-100 text-green-800 text-xs font-bold px-2 py-1 rounded border border-green-200"><i class="fa-solid fa-check mr-1"></i>${window.t('পেইড', 'Paid')}</span>`;
+                else if(req.status === 'rejected') statusBadge = `<span class="bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded border border-red-200"><i class="fa-solid fa-ban mr-1"></i>${window.t('রিজেক্ট', 'Rejected')}</span>`;
+
+                if (req.status === 'paid' && !req.archived) {
+                    totalPaidTkAll += parseFloat(req.total) || 0;
+                    if (!coinStats[req.type]) coinStats[req.type] = { totalTk: 0, totalCoins: 0 };
+                    coinStats[req.type].totalTk += parseFloat(req.total) || 0; coinStats[req.type].totalCoins += parseFloat(req.amount) || 0;
+                }
+
+                let tgDisplay = req.telegramUser ? `<a href="https://t.me/${req.telegramUser.replace('@', '').trim()}" target="_blank" title="${window.t('টেলিগ্রামে মেসেজ দিন', 'Message on Telegram')}" class="text-sm font-bold text-blue-600 dark:text-blue-400 mt-2 inline-flex items-center hover:underline hover:text-blue-800 transition bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded"><i class="fa-brands fa-telegram text-lg mr-1.5"></i> ${req.telegramUser}</a>` : `<span class="text-xs text-gray-400 mt-2 block font-medium">(TG দেওয়া হয়নি)</span>`;
+                
+                // FIXED ALIGNMENT FOR NUMBERS SO THEY DON'T WRAP WEIRDLY
+                let numberDisplay = `<div class="text-sm font-bold text-gray-900 dark:text-gray-200 mt-1 mb-1 whitespace-nowrap">${req.method}</div><div class="flex items-center"><div class="text-base font-mono tracking-widest font-bold text-gray-700 dark:text-gray-300 cursor-pointer hover:text-brand bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded border dark:border-gray-600 shadow-sm transition hover:shadow whitespace-nowrap inline-flex items-center" onclick="copyNumber('${req.account}')" title="${window.t('নাম্বার কপি করুন', 'Copy Number')}">${req.account} <i class="fa-regular fa-copy ml-1.5 text-sm pointer-events-none"></i></div></div>`;
+
+                if (req.status === 'pending') {
+                    pendingCount++;
+                    pBody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border-b dark:border-gray-700"><td class="px-4 py-4 text-sm font-bold text-gray-900 dark:text-gray-200 min-w-[120px]">${req.date}</td><td class="px-4 py-4 min-w-[120px]"><div class="text-sm font-black text-brand whitespace-nowrap">${req.amount}k ${req.type}</div><div class="text-xs font-bold text-green-600 bg-green-100 dark:bg-green-900/30 px-2 py-1 rounded mt-1 inline-block whitespace-nowrap">৳${req.total}</div></td><td class="px-4 py-4 min-w-[200px]">${numberDisplay}${tgDisplay}</td><td class="px-4 py-4"><textarea onchange="saveAdminNote('${req.dbId}', this.value)" placeholder="${window.t('নোট...', 'Note...')}" class="w-full text-xs font-medium p-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-gray-700 dark:text-white focus:ring-brand focus:border-brand h-16 min-w-[150px]">${req.adminNote||''}</textarea></td><td class="px-4 py-4 text-center"><button onclick="openImageModal('${req.image}')" class="text-brand bg-brand-light/50 px-3 py-1.5 rounded font-bold text-sm shadow-sm hover:bg-brand hover:text-white transition whitespace-nowrap"><i class="fa-solid fa-expand mr-1"></i> ${window.t('ছবি', 'Img')}</button></td><td class="px-4 py-4 text-center space-y-2 min-w-[100px]"><button onclick="openApproveModal('${req.dbId}')" class="w-full bg-green-600 text-white px-3 py-1.5 rounded hover:bg-green-700 font-bold shadow transition text-sm whitespace-nowrap"><i class="fa-solid fa-check mr-1"></i> ${window.t('পেমেন্ট', 'Pay')}</button><button onclick="openRejectModal('${req.dbId}')" class="w-full bg-red-100 text-red-700 dark:bg-red-900/30 px-3 py-1.5 rounded hover:bg-red-200 font-bold shadow-sm transition text-sm mb-2 whitespace-nowrap"><i class="fa-solid fa-xmark mr-1"></i> ${window.t('বাতিল', 'Reject')}</button><button onclick="handleDeleteHistory('${req.dbId}')" class="text-xs text-red-500 hover:underline whitespace-nowrap"><i class="fa-solid fa-trash-can"></i> ডিলিট</button></td></tr>`;
+                } else if (req.archived === true) {
+                    aBody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border-b dark:border-gray-700"><td class="px-4 py-4 text-sm text-gray-600 font-medium min-w-[120px]">${req.date}</td><td class="px-4 py-4 min-w-[120px]"><div class="text-sm font-bold whitespace-nowrap">${req.amount}k ${req.type} = ৳${req.total}</div></td><td class="px-4 py-4 min-w-[200px]">${numberDisplay}${tgDisplay}</td><td class="px-4 py-4 text-center whitespace-nowrap"><button onclick="openImageModal('${req.image}')" class="text-gray-500 hover:text-brand"><i class="fa-solid fa-image text-xl"></i></button>${req.adminProof ? `<button onclick="openImageModal('${req.adminProof}')" class="text-green-500 hover:text-green-700 ml-2"><i class="fa-solid fa-file-invoice text-xl"></i></button>` : ''}</td><td class="px-4 py-4 text-center whitespace-nowrap">${statusBadge}</td></tr>`;
+                } else {
+                    hBody.innerHTML += `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition border-b dark:border-gray-700"><td class="px-4 py-4 text-sm text-gray-600 font-medium min-w-[120px]">${req.date}</td><td class="px-4 py-4 min-w-[120px]"><div class="text-sm font-bold whitespace-nowrap">${req.amount}k ${req.type} = ৳${req.total}</div></td><td class="px-4 py-4 min-w-[200px]">${numberDisplay}${tgDisplay}</td><td class="px-4 py-4 text-center whitespace-nowrap"><button onclick="openImageModal('${req.image}')" class="text-gray-500 hover:text-brand"><i class="fa-solid fa-image text-xl"></i></button>${req.adminProof ? `<button onclick="openImageModal('${req.adminProof}')" class="text-green-500 hover:text-green-700 ml-2"><i class="fa-solid fa-file-invoice text-xl"></i></button>` : ''}</td><td class="px-4 py-4 text-center whitespace-nowrap">${statusBadge}</td><td class="px-4 py-4 text-center whitespace-nowrap"><button onclick="handleDeleteHistory('${req.dbId}')" class="text-red-500 hover:bg-red-100 p-2 rounded transition"><i class="fa-solid fa-trash-can"></i></button></td></tr>`;
+                }
+            });
+
+            document.getElementById('stat-pending').innerText = pendingCount; 
+            document.getElementById('stat-total-paid').innerText = '৳' + (totalPaidTkAll % 1 !== 0 ? totalPaidTkAll.toFixed(2) : totalPaidTkAll.toLocaleString('en-US'));
+            
+            const statsContainer = document.getElementById('dynamic-stats-container'); statsContainer.innerHTML = ''; let hasStats = false;
+            for (const [coinName, data] of Object.entries(coinStats)) {
+                let isDefinedCoin = globalSettings.coins && globalSettings.coins.find(c => c.name === coinName);
+                if (isDefinedCoin || data.totalTk > 0 || data.totalCoins > 0) {
+                    hasStats = true;
+                    statsContainer.innerHTML += `<div class="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm relative overflow-hidden group"><h5 class="font-bold text-lg mb-3 flex items-center border-b dark:border-gray-700 pb-2"><i class="fa-solid fa-coins text-brand mr-2"></i> ${coinName}</h5><div class="flex justify-between items-end"><div><p class="text-xs text-gray-500 font-bold mb-1">${window.t('মোট পেইড', 'Total Paid')}</p><p class="text-xl font-black text-green-600">৳${data.totalTk % 1 !== 0 ? data.totalTk.toFixed(2) : data.totalTk.toLocaleString('en-US')}</p></div><div class="text-right"><p class="text-xs text-gray-500 font-bold mb-1">${window.t('রিসিভড', 'Received')}</p><p class="text-lg font-bold text-brand">${data.totalCoins}k</p></div></div></div>`;
+                }
+            }
+            if (!hasStats) statsContainer.innerHTML = `<div class="col-span-full text-center py-4 text-gray-500 text-sm font-bold bg-gray-50 rounded-lg border border-dashed">${window.t('কোনো কয়েন ডাটা নেই', 'No Coin Data')}</div>`;
+
+            const badge = document.getElementById('pendingBadge');
+            if(pendingCount > 0) { badge.textContent = pendingCount; badge.classList.remove('hidden'); } else badge.classList.add('hidden');
+            if(pBody.innerHTML === '') pBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-bold">${window.t('পেন্ডিং নেই', 'No Pending Requests')}</td></tr>`;
+            if(hBody.innerHTML === '') hBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-gray-500 font-bold">${window.t('কোনো হিসাব নেই', 'No History')}</td></tr>`;
+            if(aBody.innerHTML === '') aBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-gray-500 font-bold">${window.t('আর্কাইভ ফাঁকা', 'Archive Empty')}</td></tr>`;
+        }
+
+        window.filterTable = function(tableId, inputId) {
+            let input = document.getElementById(inputId).value.toLowerCase(); let rows = document.getElementById(tableId).getElementsByTagName('tr');
+            for(let i = 0; i < rows.length; i++) { if(rows[i].getElementsByTagName('td').length > 1) { rows[i].style.display = rows[i].innerText.toLowerCase().includes(input) ? '' : 'none'; } }
+        }
+
+        window.openImageModal = function(src) { document.getElementById('fullSizeImage').src = src; document.getElementById('imageModal').classList.remove('hidden'); }
+        window.closeImageModal = function() { document.getElementById('imageModal').classList.add('hidden'); }
+
+        window.openApproveModal = function(dbId) { currentApproveId = dbId; document.getElementById('adminProofInput').value = ''; document.getElementById('approveModal').classList.remove('hidden'); }
+        window.closeApproveModal = function() { document.getElementById('approveModal').classList.add('hidden'); currentApproveId = null; }
+        
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let width = img.width, height = img.height; const MAX_SIZE = 500;
+                    if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.5));
+                }; img.onerror = () => { alert("Error"); };
+                img.src = event.target.result;
+            }; reader.readAsDataURL(file);
+        }
+
+        window.confirmApproval = async function() {
+            if (!currentUser) return;
+            const file = document.getElementById('adminProofInput').files[0]; 
+            if(file) {
+                compressImage(file, async (res) => { await updateReqStatus(currentApproveId, 'paid', res); });
+            } else {
+                if(await window.adminCustomConfirm(window.t("সতর্কতা", "Warning"), window.t("প্রুফ ছবি ছাড়াই পেমেন্ট কনফার্ম করবেন?", "Confirm payment without proof image?"))) await updateReqStatus(currentApproveId, 'paid', null); 
+            }
+        }
+
+        async function updateReqStatus(dbId, status, proof, rejectReason = null) {
+            if (!currentUser) return;
+            const updateData = { status: status };
+            if(proof) updateData.adminProof = proof; 
+            if(rejectReason) updateData.rejectReason = rejectReason;
+            
+            await updateDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', dbId), updateData);
+            window.closeApproveModal(); window.closeRejectModal(); window.switchAdminTab('history');
+        }
+
+        window.openRejectModal = function(dbId) { currentRejectId = dbId; document.getElementById('rejectReason').value = ''; document.getElementById('rejectModal').classList.remove('hidden'); }
+        window.closeRejectModal = function() { document.getElementById('rejectModal').classList.add('hidden'); }
+        window.confirmReject = function() { let res = document.getElementById('rejectReason').value; if(!res) return window.adminCustomAlert(window.t('ত্রুটি', 'Error'), window.t('কারণ লিখুন!', 'Enter a reason!')); updateReqStatus(currentRejectId, 'rejected', null, res); }
+        window.handleDeleteHistory = async function(dbId) { 
+            if (!currentUser) return;
+            if(await window.adminCustomConfirm(window.t('সতর্কতা', 'Warning'), window.t('এটি ডিলিট করতে চান?', 'Delete this?'))) { 
+                await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'requests', dbId));
+            } 
+        }
+
+        document.getElementById('siteLogoInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); let width = img.width, height = img.height; const MAX_SIZE = 200; 
+                        if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); 
+                        siteLogoBase64 = canvas.toDataURL('image/png', 0.8);
+                        document.getElementById('siteLogoPreviewContainer').innerHTML = `<img src="${siteLogoBase64}" class="h-8 w-8 object-contain"><span class="text-xs font-bold text-green-600 ml-2">Ok</span>`;
+                        document.getElementById('removeSiteLogoBtn').classList.remove('hidden');
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
+            }
+        });
+
+        window.removeSiteLogo = function() { siteLogoBase64 = null; document.getElementById('siteLogoInput').value = ''; document.getElementById('siteLogoPreviewContainer').innerHTML = `<i class="fa-solid fa-image text-gray-400"></i><span class="text-xs font-bold text-gray-500 dark:text-gray-400 ml-2">${window.t('লোগো আপলোড', 'Upload Logo')}</span>`; document.getElementById('removeSiteLogoBtn').classList.add('hidden'); }
+
+        function updateSettingsUIAdmin() {
+            document.getElementById('setSiteName').value = globalSettings.siteName || 'NS & Top Coin';
+            if(globalSettings.siteLogo) { siteLogoBase64 = globalSettings.siteLogo; document.getElementById('siteLogoPreviewContainer').innerHTML = `<img src="${globalSettings.siteLogo}" class="h-8 w-8 object-contain"><span class="text-xs font-bold text-green-600 ml-2">Ok</span>`; document.getElementById('removeSiteLogoBtn').classList.remove('hidden'); } else { window.removeSiteLogo(); }
+            document.getElementById('setNoticeActive').checked = globalSettings.noticeActive || false; document.getElementById('setNoticeText').value = globalSettings.noticeText || '';
+            document.getElementById('setMinLimit').value = globalSettings.limits?.min || 1; document.getElementById('setMaxLimit').value = globalSettings.limits?.max || 100;
+            document.getElementById('payBkash').checked = globalSettings.methods.bkash; document.getElementById('payNagad').checked = globalSettings.methods.nagad; document.getElementById('payRocket').checked = globalSettings.methods.rocket; document.getElementById('payBinance').checked = globalSettings.methods.binance || false;
+            document.getElementById('linkFb').value = globalSettings.support?.fb || ''; document.getElementById('linkWa').value = globalSettings.support?.wa || ''; document.getElementById('linkTg').value = globalSettings.support?.tg || '';
+            document.getElementById('setSystemActive').checked = globalSettings.systemActive !== false; document.getElementById('setStopMsg').value = globalSettings.stopMsg || '';
+            document.getElementById('setSuccessSms').value = globalSettings.successSms || "SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।";
+            document.getElementById('setTgRequired').checked = globalSettings.tgRequired || false;
+            renderAdminCoins(); resetNewCoinLogoInput();
+        }
+
+        async function updateGlobalSettingsFirestore() {
+            if (!currentUser) return;
+            const settingsRef = doc(db, 'artifacts', appId, 'public', 'data', 'settings', 'global');
+            await setDoc(settingsRef, globalSettings);
+        }
+
+        function forceSaveAndAlert(message) {
+            updateGlobalSettingsFirestore().then(() => {
+                window.adminCustomAlert(window.t('সফল!', 'Success!'), message);
+            }).catch(e => {
+                window.adminCustomAlert(window.t('ডাটাবেস এরর!', 'Database Error!'), window.t('ডাটা সেভ হয়নি। ইন্টারনেট কানেকশন চেক করুন।', 'Data not saved. Check connection.'));
+            });
+        }
+
+        window.saveSiteInfo = function() { 
+            globalSettings.siteName = document.getElementById('setSiteName').value || 'NS & Top Coin'; 
+            globalSettings.siteLogo = siteLogoBase64; 
+            globalSettings.noticeActive = document.getElementById('setNoticeActive').checked; 
+            globalSettings.noticeText = document.getElementById('setNoticeText').value; 
+            globalSettings.tgRequired = document.getElementById('setTgRequired').checked; 
+            forceSaveAndAlert(window.t('সাইট ইনফো সেভ হয়েছে!', 'Site Info Saved!')); 
+        }
+        window.saveLimits = function() { globalSettings.limits = { min: parseFloat(document.getElementById('setMinLimit').value) || 1, max: parseFloat(document.getElementById('setMaxLimit').value) || 100 }; forceSaveAndAlert(window.t('লিমিট সেভ হয়েছে!', 'Limits Saved!')); }
+        window.savePaymentMethods = function() { globalSettings.methods = { bkash: document.getElementById('payBkash').checked, nagad: document.getElementById('payNagad').checked, rocket: document.getElementById('payRocket').checked, binance: document.getElementById('payBinance').checked }; forceSaveAndAlert(window.t('পেমেন্ট মেথড সেভ হয়েছে!', 'Payment Methods Saved!')); }
+        window.saveSupportLinks = function() { globalSettings.support = { fb: document.getElementById('linkFb').value, wa: document.getElementById('linkWa').value, tg: document.getElementById('linkTg').value }; forceSaveAndAlert(window.t('সাপোর্ট লিংক সেভ হয়েছে!', 'Support Links Saved!')); }
+        window.saveSystemStatus = function() { globalSettings.systemActive = document.getElementById('setSystemActive').checked; globalSettings.stopMsg = document.getElementById('setStopMsg').value; forceSaveAndAlert(window.t('সিস্টেম স্ট্যাটাস সেভ হয়েছে!', 'System Status Saved!')); }
+        window.saveSuccessSms = function() { globalSettings.successSms = document.getElementById('setSuccessSms').value || "SMS: আপনার [account] নাম্বারে ৳[amount] পাঠানো হয়েছে।"; forceSaveAndAlert(window.t('সাকসেস মেসেজ সেভ হয়েছে!', 'Success SMS Saved!')); }
+
+        document.getElementById('newCoinLogo').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas'); let width = img.width, height = img.height; const MAX_SIZE = 150; 
+                        if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                        canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); 
+                        newCoinUploadedLogo = canvas.toDataURL('image/jpeg', 0.6);
+                        document.getElementById('newCoinLogoPreviewContainer').innerHTML = `<img src="${newCoinUploadedLogo}" class="h-8 w-8 object-cover rounded-full shadow-sm"><span class="text-xs font-bold text-green-600">Ok</span>`;
+                    }; img.src = e.target.result;
+                }; reader.readAsDataURL(file);
+            }
+        });
+
+        function resetNewCoinLogoInput() { newCoinUploadedLogo = null; document.getElementById('newCoinLogo').value = ''; document.getElementById('newCoinLogoPreviewContainer').innerHTML = `<i class="fa-solid fa-image text-gray-400" id="newCoinLogoIcon"></i><span class="text-xs font-bold text-gray-500 dark:text-gray-400" id="newCoinLogoText">${window.t('আপলোড', 'Upload')}</span>`; }
+
+        window.promptEditRate = function(i) {
+            const currentCoin = globalSettings.coins[i];
+            const newRate = prompt(`${currentCoin.name} এর নতুন 1k রেট কত দিতে চান?\nবর্তমান রেট: ৳${currentCoin.price}`, currentCoin.price);
+            
+            if (newRate !== null && newRate.trim() !== '') {
+                const parsedRate = parseFloat(newRate);
+                if (!isNaN(parsedRate)) {
+                    globalSettings.coins[i].price = parsedRate;
+                    forceSaveAndAlert(window.t('রেট সফলভাবে পরিবর্তন করা হয়েছে!', 'Rate changed successfully!'));
+                    renderAdminCoins();
+                } else {
+                    window.adminCustomAlert(window.t('ভুল', 'Error'), window.t('দয়া করে সঠিক সংখ্যা লিখুন।', 'Please enter a valid number.'));
+                }
+            }
+        }
+
+        function renderAdminCoins() {
+            const list = document.getElementById('adminCoinList'); list.innerHTML = '';
+            globalSettings.coins.forEach((c, i) => {
+                let logoHtml = c.logo ? `<img src="${c.logo}" class="w-8 h-8 rounded-full object-cover mr-3 border dark:border-gray-600">` : `<div class="w-8 h-8 rounded-full bg-brand-light dark:bg-brand-dark/50 flex items-center justify-center mr-3 text-brand"><i class="fa-solid fa-coins text-sm"></i></div>`;
+                
+                list.innerHTML += `
+                <div class="bg-white dark:bg-gray-800 p-4 rounded-xl border dark:border-gray-600 relative shadow-sm flex items-center">
+                    ${logoHtml}
+                    <div>
+                        <div class="font-bold text-lg leading-tight pr-16">${c.name}</div>
+                        <div class="text-xs font-bold text-green-700 bg-green-50 px-2 py-0.5 mt-1 rounded w-max inline-block border border-green-200">1k: ৳${c.price}</div>
+                        ${c.username ? `<div class="text-xs font-mono text-brand bg-brand-light/40 px-2 py-0.5 mt-1 rounded w-max inline-block ml-1 border border-brand-light">ID: ${c.username}</div>` : ''}
+                    </div>
+                    <div class="absolute top-1/2 -translate-y-1/2 right-3 flex gap-1">
+                        <button onclick="promptEditRate(${i})" class="text-blue-600 hover:bg-blue-100 p-2 rounded transition" title="রেট এডিট করুন"><i class="fa-solid fa-pen-to-square"></i></button>
+                        <button onclick="handleRemoveCoin(${i})" class="text-red-500 hover:bg-red-100 p-2 rounded transition" title="ডিলিট করুন"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </div>`;
+            });
+        }
+        
+        window.handleAddNewCoin = function() {
+            const n = document.getElementById('newCoinName').value, p = document.getElementById('newCoinRate').value, u = document.getElementById('newCoinUsername').value;
+            if(!n || !p) return window.adminCustomAlert(window.t('ত্রুটি', 'Error'), window.t("নাম ও রেট দিন!", "Enter name and rate!"));
+            globalSettings.coins.push({ id: 'c_' + Date.now(), name: n, price: parseFloat(p), username: u, logo: newCoinUploadedLogo });
+            document.getElementById('newCoinName').value=''; document.getElementById('newCoinRate').value=''; document.getElementById('newCoinUsername').value=''; resetNewCoinLogoInput();
+            forceSaveAndAlert(window.t('নতুন কয়েন যুক্ত করা হয়েছে!', 'New Coin Added!'));
+        }
+
+        window.handleRemoveCoin = async function(i) { if(await window.adminCustomConfirm(window.t('সতর্কতা', 'Warning'), window.t('কয়েনটি ডিলিট করবেন?', 'Delete this coin?'))) { globalSettings.coins.splice(i, 1); forceSaveAndAlert(window.t('কয়েন ডিলিট করা হয়েছে!', 'Coin Deleted!')); } }
+        window.toggleSound = function() { isSoundEnabled = !isSoundEnabled; document.getElementById('soundToggleBtn').querySelector('i').className = isSoundEnabled ? 'fa-solid fa-bell text-lg text-green-300' : 'fa-solid fa-bell-slash text-lg text-gray-400'; }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            updateSettingsUIAdmin();
+            if (localStorage.getItem('nsCoinTheme') === 'dark') document.documentElement.classList.add('dark');
+            const savedColor = localStorage.getItem('nsCoinThemeColor'); if(savedColor) changeTheme(savedColor);
+            updateThemeIcon(); if (currentLang) window.setLang(currentLang); 
+            initAuth(); 
+        });
+    </script>
+</body>
+</html>
