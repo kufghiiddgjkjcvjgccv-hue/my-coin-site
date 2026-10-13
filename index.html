@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="bn" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NS & Top Coin | কয়েন সেল প্ল্যাটফর্ম</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 🎉 Confetti Magic Script -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: { extend: { colors: { brand: { DEFAULT: 'var(--color-brand)', light: 'var(--color-brand-light)', dark: 'var(--color-brand-dark)', } } } }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', sans-serif; transition: background-color 0.3s, color 0.3s; }
+        .glass-effect { backdrop-filter: blur(10px); }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #1f2937; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        .floating-support { position: fixed; bottom: 20px; right: 20px; z-index: 50; display: flex; flex-direction: column; gap: 12px; }
+        .support-btn { width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; }
+        .support-btn:hover { transform: scale(1.1); box-shadow: 0 6px 15px rgba(0,0,0,0.4); }
+
+        .trust-badge { animation: trustPulse 2s infinite; }
+        @keyframes trustPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { transform: scale(1.02); box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+
+        :root { --color-brand: #4f46e5; --color-brand-light: #e0e7ff; --color-brand-dark: #3730a3; }
+        [data-theme="rose"] { --color-brand: #e11d48; --color-brand-light: #ffe4e6; --color-brand-dark: #be123c; }
+        [data-theme="emerald"] { --color-brand: #10b981; --color-brand-light: #d1fae5; --color-brand-dark: #047857; }
+        [data-theme="amber"] { --color-brand: #f59e0b; --color-brand-light: #fef3c7; --color-brand-dark: #b45309; }
+        [data-theme="purple"] { --color-brand: #a855f7; --color-brand-light: #f3e8ff; --color-brand-dark: #7e22ce; }
+        [data-theme="cyan"] { --color-brand: #06b6d4; --color-brand-light: #cffafe; --color-brand-dark: #0e7490; }
+        [data-theme="slate"] { --color-brand: #64748b; --color-brand-light: #f1f5f9; --color-brand-dark: #334155; }
+    </style>
+</head>
+<body class="text-gray-800 bg-gray-100 dark:bg-gray-900 dark:text-gray-200 antialiased min-h-screen flex flex-col transition-colors duration-300">
+
+    <nav class="bg-brand dark:bg-brand-dark text-white shadow-lg sticky top-0 z-40 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col sm:flex-row justify-between items-center py-2 sm:h-16 gap-2">
+                <div class="flex items-center">
+                    <i class="fa-solid fa-coins text-2xl mr-2 text-yellow-400"></i>
+                    <span id="navbarSiteName" class="font-bold text-xl tracking-wide">NS & Top Coin</span>
+                </div>
+                
+                <div class="flex items-center gap-4 bg-white/20 px-4 py-1.5 rounded-full backdrop-blur-sm">
+                    <div class="flex gap-2 border-r border-white/30 pr-4">
+                        <button type="button" id="cycleThemeBtn" class="p-1 hover:scale-110 transition" title="কালার পরিবর্তন করুন">
+                            <i class="fa-solid fa-palette text-xl text-white pointer-events-none"></i>
+                        </button>
+                    </div>
+                    <button type="button" id="toggleDarkModeBtn" class="p-1 hover:scale-110 transition" title="ডার্ক মোড অন/অফ করুন">
+                        <i id="themeIcon" class="fa-solid fa-moon text-xl text-yellow-300 pointer-events-none"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="floating-support" id="supportLinksContainer"></div>
+
+    <main class="flex-grow container mx-auto px-4 py-8 max-w-4xl">
+        <div id="notice-banner" class="hidden mb-6 bg-yellow-100 dark:bg-yellow-900 border-l-4 border-yellow-500 text-yellow-900 dark:text-yellow-100 p-5 rounded-lg shadow-md">
+            <div class="flex items-start">
+                <i class="fa-solid fa-bullhorn text-3xl text-yellow-600 dark:text-yellow-400 mr-4 mt-1 animate-pulse"></i>
+                <div>
+                    <h3 class="font-black text-xl mb-1">অ্যাডমিন নোটিশ:</h3>
+                    <p id="notice-text" class="font-bold text-lg leading-relaxed"></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="trust-indicator" class="trust-badge bg-green-100 dark:bg-green-900/40 border-2 border-green-400 dark:border-green-600 text-green-800 dark:text-green-300 rounded-full px-6 py-2.5 flex items-center justify-center w-max mx-auto mb-8 shadow-sm font-bold text-sm md:text-base">
+            <i class="fa-solid fa-shield-halved mr-2 text-green-600 dark:text-green-400 text-lg"></i> ১০০% বিশ্বস্ত ও নিরাপদ প্ল্যাটফর্ম | ফাস্ট পেমেন্ট
+        </div>
+
+        <div id="hero-header" class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">সহজেই কয়েন সেল করুন</h1>
+            <p class="text-gray-600 dark:text-gray-400 mb-6 font-medium">নিচের ধাপে ফর্মটি পূরণ করুন এবং নিশ্চিন্তে টাকা বুঝে নিন।</p>
+        </div>
+
+        <section id="sell-section" class="mb-12">
+            <div id="system-stopped-container" class="hidden bg-red-50 dark:bg-red-900 border-2 border-red-300 rounded-xl p-8 text-center shadow-lg">
+                <i class="fa-solid fa-lock text-6xl text-red-500 mb-4"></i>
+                <h2 class="text-3xl font-bold text-red-800 dark:text-red-200 mb-3">কয়েন সেল সাময়িকভাবে বন্ধ আছে</h2>
+                <p id="system-stopped-text" class="text-lg text-gray-700 dark:text-gray-200 font-bold bg-white dark:bg-gray-800 p-4 rounded-lg inline-block shadow-sm"></p>
+            </div>
+            
+            <div id="active-system-container">
+                <!-- ফর্ম রিফ্রেশ রোধ করার জন্য কোনো onsubmit বা অ্যাকশন নেই -->
+                <div id="sellFormContainer" class="space-y-6">
+                    
+                    <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center">
+                            <span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">১</span> 
+                            প্রথম কাজ: কোন কয়েন বিক্রি করবেন? <span class="text-red-500 ml-1">*</span>
+                        </h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-bold mb-4 ml-11">👉 যে কয়েনটি বিক্রি করবেন, নিচে তার উপর একটি চাপ দিন:</p>
+                        <div id="dynamic-coin-list" class="grid grid-cols-2 md:grid-cols-3 gap-4 ml-0 sm:ml-11"></div>
+                        <input type="hidden" id="coinType">
+                        <input type="hidden" id="selectedCoinRate">
+                        <input type="hidden" id="selectedUsername">
+                    </div>
+
+                    <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-2">
+                            <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 flex items-center">
+                                <span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">২</span> দ্বিতীয় কাজ: কত 1k (হাজার) কয়েন সেল করবেন? <span class="text-red-500 ml-1">*</span>
+                            </h3>
+                            <span id="limitWarningText" class="mt-2 sm:mt-0 sm:ml-4 bg-yellow-100 dark:bg-yellow-900/40 text-yellow-800 dark:text-yellow-400 px-3 py-1 rounded text-xs font-bold border border-yellow-200 dark:border-yellow-700 w-max">লিমিট: 1k - 100k</span>
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 font-bold mb-3 ml-11">👉 বক্সে লিখে দিন অথবা শর্টকাট বাটনে চাপ দিন:</p>
+                        <div class="ml-11">
+                            <div class="relative max-w-md">
+                                <input type="number" id="coinAmount" placeholder="যেমন: 50" class="w-full px-4 py-3 text-lg font-bold rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white focus:ring-0 focus:border-brand pr-12">
+                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none"><span class="text-gray-500 font-bold text-lg">k</span></div>
+                            </div>
+                            <div class="flex flex-wrap gap-2 mt-3 items-center">
+                                <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="10">10k</button>
+                                <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="20">20k</button>
+                                <button type="button" class="preset-amount-btn px-4 py-2 bg-brand-light dark:bg-brand-dark/30 hover:bg-brand hover:text-white border border-brand-light text-brand rounded-md text-sm font-bold shadow-sm transition" data-amount="50">50k</button>
+                            </div>
+                        </div>
+                        <div id="calculatorDisplay" class="hidden ml-11 mt-5 bg-green-100 dark:bg-green-900 border-2 border-green-400 dark:border-green-700 rounded-lg p-4 flex flex-col sm:flex-row justify-between items-center max-w-md shadow-sm">
+                            <span class="text-green-800 dark:text-green-200 font-bold text-lg mb-2 sm:mb-0">আপনি মোট পাবেন:</span><span id="totalAmount" class="text-3xl font-black text-green-700 dark:text-green-400">৳০</span>
+                        </div>
+                    </div>
+
+                    <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৩</span> টাকা কিসে নিবেন? <span class="text-red-500 ml-1">*</span></h3>
+                        <div class="ml-11 max-w-md space-y-4">
+                            <select id="paymentMethod" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-bold"><option value="">-- মাধ্যম সিলেক্ট করুন --</option></select>
+                            <input type="text" id="accountNumber" placeholder="আপনার নাম্বারটি লিখুন (যেমন: 017...)" class="w-full px-4 py-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white font-bold">
+                        </div>
+                    </div>
+
+                    <div id="step4-container" class="bg-brand-light dark:bg-brand-dark/40 p-6 rounded-2xl shadow-md border-l-4 border-brand transition-all duration-300">
+                        <h3 class="text-xl font-bold text-brand dark:text-brand-light mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৪</span> কয়েন ট্রান্সফার করুন</h3>
+                        <div id="step4-initial" class="ml-11"><p class="text-gray-500 font-bold italic">⚠ অনুগ্রহ করে প্রথমে উপর থেকে যেকোনো একটি কয়েন সিলেক্ট করুন।</p></div>
+                        <div id="transfer-section" class="ml-11 hidden mt-2">
+                            <p class="text-sm text-gray-700 dark:text-gray-300 font-bold mb-3">👉 নীল রঙের 'কপি' বাটনে চাপ দিয়ে নিচের ইউজারনেমটি কপি করুন এবং সেই আইডিতে কয়েন ট্রান্সফার করুন।</p>
+                            <div class="bg-white dark:bg-gray-800 p-3 pl-4 rounded-lg border-2 border-brand-light flex justify-between items-center mb-2 max-w-md">
+                                <span id="dynamic-username" class="font-mono text-xl font-black text-red-600 dark:text-red-400 tracking-wider"></span>
+                                <button type="button" id="copyUsernameBtn" class="bg-brand text-white px-5 py-2 rounded-md font-bold transition hover:bg-brand-dark shadow flex items-center"><i class="fa-solid fa-copy mr-1 pointer-events-none"></i> কপি করুন</button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-red-700 dark:text-red-400 font-bold mt-4 ml-11"><i class="fa-solid fa-triangle-exclamation"></i> সতর্কতা: কয়েন পাঠানোর পর সাথে সাথে একটি স্ক্রিনশট তুলে রাখুন!</p>
+                    </div>
+
+                    <div class="glass-effect bg-white/95 dark:bg-gray-800/95 p-6 rounded-2xl shadow-md border-l-4 border-brand">
+                        <h3 class="text-xl font-bold text-gray-800 dark:text-gray-100 mb-2 flex items-center"><span class="bg-brand text-white w-8 h-8 flex justify-center items-center rounded-full text-lg mr-3 shadow">৫</span> স্ক্রিনশট আপলোড করুন <span class="text-red-500 ml-1">*</span></h3>
+                        <div class="ml-11">
+                            <div id="uploadBox" class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-brand-light dark:border-brand-dark border-dashed rounded-xl cursor-pointer bg-white dark:bg-gray-700 hover:bg-brand-light/50 transition">
+                                <div class="space-y-2 text-center pointer-events-none">
+                                    <i class="fa-solid fa-image text-5xl text-brand mb-2" id="uploadIcon"></i>
+                                    <span class="block font-bold text-brand dark:text-brand-light text-lg">এখানে চাপ দিয়ে ছবি সিলেক্ট করুন</span>
+                                    <p id="fileNameDisplay" class="text-md font-bold text-green-600 dark:text-green-400 mt-2 hidden bg-green-50 dark:bg-green-900 py-1 px-3 rounded inline-block"></p>
+                                </div>
+                                <input id="proofImage" type="file" accept="image/*" class="sr-only">
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="text-center font-bold text-gray-600 dark:text-gray-400 mt-6">সবকিছু ঠিক থাকলে নিচের সবুজ বাটনে একটি চাপ দিন।</p>
+                    <button type="button" id="submitBtn" class="w-full py-4 rounded-xl shadow-lg text-xl font-bold text-white bg-green-600 hover:bg-green-700 transition transform hover:-translate-y-1 flex justify-center items-center">
+                        <i class="fa-solid fa-paper-plane mr-2 text-2xl pointer-events-none"></i> রিকোয়েস্ট পাঠিয়ে দিন
+                    </button>
+                </div>
+            </div> 
+
+            <div id="autoHistorySection" class="mt-16 hidden">
+                <div class="flex items-center justify-between mb-6 border-b dark:border-gray-700 pb-3">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center"><i class="fa-solid fa-clock-rotate-left text-brand mr-2"></i>আপনার রিকোয়েস্ট হিস্ট্রি</h2>
+                    <button type="button" id="clearHistoryBtn" class="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-200 px-3 py-1.5 rounded-md font-bold text-sm transition flex items-center border border-red-200 dark:border-red-800">
+                        <i class="fa-solid fa-trash-can mr-1 pointer-events-none"></i> সব ক্লিয়ার করুন
+                    </button>
+                </div>
+                <div id="autoHistoryContainer" class="space-y-5"></div>
+            </div>
+        </section>
+    </main>
+
+    <div id="customAlert" class="fixed inset-0 bg-gray-900 bg-opacity-70 hidden flex items-center justify-center z-[60] p-4 backdrop-blur-sm">
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full text-center border dark:border-gray-700">
+            <div id="alertIcon" class="mx-auto flex items-center justify-center h-16 w-16 rounded-full mb-4"></div>
+            <h3 id="alertTitle" class="text-xl font-bold text-gray-900 dark:text-white mb-2"></h3>
+            <p id="alertMessage" class="text-md text-gray-600 dark:text-gray-300 font-medium mb-6"></p>
+            <div id="alertButtons" class="flex gap-3 justify-center"></div>
+        </div>
+    </div>
+
+    <div id="userImageModal" class="fixed inset-0 bg-black bg-opacity-95 hidden flex items-center justify-center z-[70] p-4 transition-opacity">
+        <button type="button" id="closeImageModalBtn" class="absolute top-6 right-6 text-white bg-red-600 rounded-full w-12 h-12 flex items-center justify-center text-2xl z-50 hover:scale-110 transition"><i class="fa-solid fa-xmark pointer-events-none"></i></button>
+        <div class="w-full h-full flex justify-center items-center p-4"><img id="userFullSizeImage" src="" class="max-w-full max-h-full object-contain rounded shadow-2xl"></div>
+    </div>
+
+    <!-- PURE LOCAL STORAGE LOGIC (100% OFFLINE FIX) -->
+    <script>
+        let globalSettings = { limits: {min: 1, max: 100}, support: {} };
+        let userRequests = [];
+        let uploadedImageBase64 = null; 
+        let confirmActionResolver = null;
+
+        function loadLocalData() {
+            try {
+                let savedSettings = localStorage.getItem('nsCoin_settings');
+                if (savedSettings) {
+                    globalSettings = JSON.parse(savedSettings);
+                    if(!globalSettings.limits) globalSettings.limits = {min: 1, max: 100};
+                    if(!globalSettings.support) globalSettings.support = {fb:'', wa:'', tg:''};
+                } else {
+                    globalSettings = { coins: [{ id: 'c1', name: 'NS Coin', price: 10, username: 'ns_id_01' }], methods: {bkash:true,nagad:true,rocket:true}, limits: {min: 1, max: 100}, support: {}, systemActive: true };
+                }
+                applySettingsData();
+
+                let savedReqs = localStorage.getItem('nsCoin_requests');
+                userRequests = savedReqs ? JSON.parse(savedReqs) : [];
+                userRequests.sort((a, b) => b.createdAt - a.createdAt);
+                renderUserHistory();
+            } catch (error) {
+                console.error("Local storage error", error);
+            }
+        }
+
+        setInterval(loadLocalData, 2000);
+
+        const themes = ['default', 'rose', 'emerald', 'amber', 'purple', 'cyan', 'slate'];
+        let currentThemeIndex = 0;
+        
+        function changeTheme(themeName) { document.documentElement.setAttribute('data-theme', themeName); localStorage.setItem('nsCoinThemeColor', themeName); currentThemeIndex = Math.max(0, themes.indexOf(themeName)); }
+        
+        document.getElementById('cycleThemeBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            currentThemeIndex = (currentThemeIndex + 1) % themes.length; changeTheme(themes[currentThemeIndex]);
+        });
+
+        document.getElementById('toggleDarkModeBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.documentElement.classList.toggle('dark'); localStorage.setItem('nsCoinTheme', document.documentElement.classList.contains('dark') ? 'dark' : 'light'); updateThemeIcon();
+        });
+
+        function updateThemeIcon() { document.getElementById('themeIcon').className = document.documentElement.classList.contains('dark') ? 'fa-solid fa-sun text-xl text-yellow-400 pointer-events-none' : 'fa-solid fa-moon text-xl text-yellow-300 pointer-events-none'; }
+
+        function applySettingsData() {
+            const siteName = globalSettings.siteName || 'NS & Top Coin';
+            document.title = `${siteName} | কয়েন সেল প্ল্যাটফর্ম`; document.getElementById('navbarSiteName').textContent = siteName;
+            
+            const coinContainer = document.getElementById('dynamic-coin-list'); 
+            coinContainer.innerHTML = '';
+            
+            if(globalSettings.coins) {
+                globalSettings.coins.forEach(coin => {
+                    let safeName = coin.name.replace(/'/g, "\\'"); let safeUser = (coin.username || '').replace(/'/g, "\\'");
+                    let btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'coin-btn relative py-5 px-2 border-2 border-brand-light dark:border-gray-600 rounded-3xl hover:border-brand hover:shadow-lg transition-all font-bold text-gray-700 dark:text-gray-200 flex flex-col items-center gap-2 bg-white dark:bg-gray-800';
+                    btn.id = 'btn-' + coin.id;
+                    btn.innerHTML = `
+                        <div class="bg-brand-light dark:bg-brand-dark/50 p-3 rounded-full mb-1 pointer-events-none"><i class="fa-solid fa-coins text-3xl text-brand dark:text-brand-light"></i></div>
+                        <span class="text-xl font-black tracking-wide pointer-events-none">${coin.name}</span>
+                        <div class="bg-gray-100 dark:bg-gray-700 px-4 py-1.5 rounded-full border mt-1 shadow-sm pointer-events-none"><span class="text-sm font-bold">1k = ৳${coin.price}</span></div>
+                    `;
+                    // Event listener added via JS to prevent any default form actions
+                    btn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        selectCoin(coin.id, coin.name, coin.price, coin.username);
+                    });
+                    coinContainer.appendChild(btn);
+                });
+            }
+
+            const methodSelect = document.getElementById('paymentMethod'); 
+            const currentMethod = methodSelect.value;
+            methodSelect.innerHTML = '<option value="">-- মাধ্যম সিলেক্ট করুন --</option>';
+            if(globalSettings.methods?.bkash) methodSelect.innerHTML += `<option value="Bkash" ${currentMethod === 'Bkash' ? 'selected' : ''}>বিকাশ (bKash)</option>`;
+            if(globalSettings.methods?.nagad) methodSelect.innerHTML += `<option value="Nagad" ${currentMethod === 'Nagad' ? 'selected' : ''}>নগদ (Nagad)</option>`;
+            if(globalSettings.methods?.rocket) methodSelect.innerHTML += `<option value="Rocket" ${currentMethod === 'Rocket' ? 'selected' : ''}>রকেট (Rocket)</option>`;
+
+            document.getElementById('limitWarningText').textContent = `লিমিট: ${globalSettings.limits.min}k থেকে ${globalSettings.limits.max}k`;
+            document.getElementById('coinAmount').min = globalSettings.limits.min;
+            document.getElementById('coinAmount').max = globalSettings.limits.max;
+
+            const supContainer = document.getElementById('supportLinksContainer'); supContainer.innerHTML = '';
+            if(globalSettings.support?.wa) supContainer.innerHTML += `<a href="${globalSettings.support.wa}" target="_blank" class="support-btn" style="background-color: #25D366;" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>`;
+            if(globalSettings.support?.tg) supContainer.innerHTML += `<a href="${globalSettings.support.tg}" target="_blank" class="support-btn" style="background-color: #0088cc;" title="Telegram"><i class="fa-brands fa-telegram"></i></a>`;
+            if(globalSettings.support?.fb) supContainer.innerHTML += `<a href="${globalSettings.support.fb}" target="_blank" class="support-btn" style="background-color: #1877F2;" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>`;
+
+            if(globalSettings.noticeActive && globalSettings.noticeText) { document.getElementById('notice-banner').classList.remove('hidden'); document.getElementById('notice-text').textContent = globalSettings.noticeText; } else { document.getElementById('notice-banner').classList.add('hidden'); }
+            
+            if(globalSettings.systemActive === false) { 
+                document.getElementById('active-system-container').classList.add('hidden'); 
+                document.getElementById('hero-header').classList.add('hidden'); 
+                document.getElementById('trust-indicator').classList.add('hidden'); 
+                document.getElementById('system-stopped-container').classList.remove('hidden'); 
+                document.getElementById('system-stopped-text').textContent = globalSettings.stopMsg || "বর্তমানে আমাদের কয়েন সেল বন্ধ আছে।"; 
+            } else { 
+                document.getElementById('active-system-container').classList.remove('hidden'); 
+                document.getElementById('hero-header').classList.remove('hidden'); 
+                document.getElementById('trust-indicator').classList.remove('hidden'); 
+                document.getElementById('system-stopped-container').classList.add('hidden'); 
+            }
+        }
+
+        const coinTypeInput = document.getElementById('coinType'), coinRateInput = document.getElementById('selectedCoinRate'), coinAmountInput = document.getElementById('coinAmount'), totalAmountDisplay = document.getElementById('totalAmount'), calculatorDisplay = document.getElementById('calculatorDisplay');
+
+        function selectCoin(id, name, price, username) {
+            coinTypeInput.value = name; coinRateInput.value = price;
+            document.querySelectorAll('.coin-btn').forEach(btn => { btn.classList.remove('border-brand', 'bg-brand-light', 'dark:bg-brand-dark/30', 'ring-4', 'ring-brand-light'); btn.classList.add('border-brand-light', 'bg-white', 'dark:bg-gray-800'); });
+            const activeBtn = document.getElementById('btn-' + id);
+            if(activeBtn) {
+                activeBtn.classList.remove('border-brand-light', 'bg-white', 'dark:bg-gray-800'); activeBtn.classList.add('border-brand', 'bg-brand-light', 'dark:bg-brand-dark/30', 'ring-4', 'ring-brand-light');
+            }
+            document.getElementById('step4-initial').classList.add('hidden');
+            const transferSec = document.getElementById('transfer-section');
+            if(username && username.trim() !== '') { transferSec.classList.remove('hidden'); document.getElementById('dynamic-username').textContent = username; document.getElementById('dynamic-username').setAttribute('data-username', username); } else { transferSec.classList.add('hidden'); }
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            const amount = parseFloat(coinAmountInput.value) || 0, price = parseFloat(coinRateInput.value) || 0;
+            if (coinTypeInput.value && amount > 0) { totalAmountDisplay.textContent = `৳${Math.round(price * amount)}`; calculatorDisplay.classList.remove('hidden'); } else { calculatorDisplay.classList.add('hidden'); }
+        }
+        coinAmountInput.addEventListener('input', calculateTotal); 
+
+        // Add event listeners to preset amount buttons
+        document.querySelectorAll('.preset-amount-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                coinAmountInput.value = this.getAttribute('data-amount');
+                calculateTotal();
+            });
+        });
+
+        document.getElementById('copyUsernameBtn').addEventListener('click', function(e) {
+            e.preventDefault();
+            const text = document.getElementById('dynamic-username').getAttribute('data-username'); if(!text) return;
+            const textArea = document.createElement("textarea"); textArea.value = text; document.body.appendChild(textArea); textArea.select();
+            try { document.execCommand('copy'); showAlert('success', 'কপি হয়েছে!', `ইউজারনেম '${text}' কপি করা হয়েছে।`); } catch (err) { showAlert('error', 'ত্রুটি', 'কপি করতে সমস্যা হয়েছে।'); }
+            document.body.removeChild(textArea);
+        });
+
+        function compressImage(file, callback) {
+            const reader = new FileReader();
+            reader.onload = event => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); let width = img.width, height = img.height; const MAX_SIZE = 500;
+                    if (width > height && width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } else if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    canvas.width = width; canvas.height = height; canvas.getContext('2d').drawImage(img, 0, 0, width, height); callback(canvas.toDataURL('image/jpeg', 0.4));
+                }; img.src = event.target.result;
+            }; reader.readAsDataURL(file);
+        }
+
+        document.getElementById('uploadBox').addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('proofImage').click();
+        });
+
+        document.getElementById('proofImage').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) { document.getElementById('fileNameDisplay').textContent = "ছবি সিলেক্ট করা হয়েছে"; document.getElementById('fileNameDisplay').classList.remove('hidden'); document.getElementById('uploadIcon').className = 'fa-solid fa-file-circle-check text-5xl text-green-500 mb-2 pointer-events-none'; compressImage(file, function(cb) { uploadedImageBase64 = cb; }); }
+        });
+
+        function showAlert(type, title, message) {
+            const modal = document.getElementById('customAlert'), icon = document.getElementById('alertIcon'), btnContainer = document.getElementById('alertButtons');
+            document.getElementById('alertTitle').textContent = title; document.getElementById('alertMessage').textContent = message;
+            if (type === 'success') { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-4 text-green-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-check"></i>'; } else if (type === 'confirm') { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-yellow-100 mb-4 text-yellow-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-circle-question"></i>'; } else { icon.className = 'mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-red-100 mb-4 text-red-600 text-3xl'; icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>'; }
+            if(type === 'confirm') { 
+                btnContainer.innerHTML = `<button type="button" id="alertCancelBtn" class="flex-1 rounded-lg px-4 py-3 bg-gray-200 dark:bg-gray-700 font-bold text-gray-800 dark:text-white transition">বাতিল</button><button type="button" id="alertConfirmBtn" class="flex-1 rounded-lg px-4 py-3 bg-red-600 font-bold text-white hover:bg-red-700 transition">নিশ্চিত</button>`; 
+                document.getElementById('alertCancelBtn').addEventListener('click', function() { resolveConfirm(false); });
+                document.getElementById('alertConfirmBtn').addEventListener('click', function() { resolveConfirm(true); });
+            } else { 
+                btnContainer.innerHTML = `<button type="button" id="alertOkBtn" class="w-full rounded-lg px-4 py-3 bg-brand font-bold text-white transition">ঠিক আছে</button>`; 
+                document.getElementById('alertOkBtn').addEventListener('click', closeAlert);
+            }
+            modal.classList.remove('hidden');
+        }
+
+        function showConfirm(title, message) { return new Promise(resolve => { confirmActionResolver = resolve; showAlert('confirm', title, message); }); }
+        function resolveConfirm(res) { closeAlert(); if(confirmActionResolver) confirmActionResolver(res); }
+        function closeAlert() { document.getElementById('customAlert').classList.add('hidden'); }
+
+        // Mian Submit Event
+        document.getElementById('submitBtn').addEventListener('click', function(e) {
+            e.preventDefault(); // Stop any form submission
+            
+            const btn = this;
+            const type = coinTypeInput.value;
+            const amount = parseFloat(coinAmountInput.value);
+            const method = document.getElementById('paymentMethod').value;
+            const account = document.getElementById('accountNumber').value;
+            
+            if (!type) return showAlert('error', 'ভুল', 'দয়া করে উপরের বক্স থেকে কয়েন নির্বাচন করুন।');
+            if (!amount || isNaN(amount)) return showAlert('error', 'ভুল', 'দয়া করে কত কয়েন সেল করবেন তা লিখুন।');
+            if (!method) return showAlert('error', 'ভুল', 'দয়া করে পেমেন্ট মাধ্যম সিলেক্ট করুন।');
+            if (!account) return showAlert('error', 'ভুল', 'দয়া করে আপনার অ্যাকাউন্ট নাম্বার দিন।');
+            if (!uploadedImageBase64) return showAlert('error', 'ভুল', 'দয়া করে স্ক্রিনশট আপলোড করুন।');
+
+            /* ⚖️ Amount Limit Validation Rule */
+            if(amount < globalSettings.limits.min || amount > globalSettings.limits.max) {
+                return showAlert('error', 'লিমিট এরর!', `দয়া করে ${globalSettings.limits.min}k থেকে ${globalSettings.limits.max}k এর মধ্যে কয়েন দিন। এর কম বা বেশি সেল করা যাবে না।`);
+            }
+
+            let bannedList = globalSettings.bannedUsers || []; let savedPhone = localStorage.getItem('userPhone');
+            if (bannedList.includes(account) || (savedPhone && bannedList.includes(savedPhone))) return showAlert('error', 'অ্যাকাউন্ট ব্যানড!', 'দুঃখিত! আপনার নাম্বারটি ব্যান করা হয়েছে।');
+
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2 pointer-events-none"></i> পাঠানো হচ্ছে...'; btn.disabled = true;
+
+            try {
+                let newReq = {
+                    dbId: 'req_' + Date.now(),
+                    createdAt: Date.now(), date: new Date().toLocaleString('bn-BD'), type: type, amount: amount, total: Math.round(parseFloat(coinRateInput.value) * amount), method: method, account: account, image: uploadedImageBase64, status: 'pending', adminNote: '', archived: false
+                };
+                
+                let reqs = localStorage.getItem('nsCoin_requests');
+                reqs = reqs ? JSON.parse(reqs) : [];
+                reqs.push(newReq);
+                localStorage.setItem('nsCoin_requests', JSON.stringify(reqs));
+
+                localStorage.setItem('userPhone', account);
+                
+                // Reset manual elements
+                coinTypeInput.value = ''; coinAmountInput.value = ''; document.getElementById('paymentMethod').value = ''; document.getElementById('accountNumber').value = ''; document.getElementById('proofImage').value = '';
+                
+                calculatorDisplay.classList.add('hidden'); uploadedImageBase64 = null; document.getElementById('uploadIcon').className = 'fa-solid fa-image text-5xl text-brand mb-2 pointer-events-none'; document.getElementById('fileNameDisplay').classList.add('hidden');
+                document.getElementById('step4-initial').classList.remove('hidden'); document.getElementById('transfer-section').classList.add('hidden');
+                document.querySelectorAll('.coin-btn').forEach(b => { b.classList.remove('border-brand', 'bg-brand-light', 'ring-4'); b.classList.add('border-brand-light', 'bg-white'); });
+
+                /* 🎉 Confetti Magic */
+                confetti({ particleCount: 150, spread: 80, origin: { y: 0.6 }, colors: ['#4f46e5', '#10b981', '#f59e0b', '#e11d48'] });
+
+                showAlert('success', 'রিকোয়েস্ট সফল হয়েছে!', 'আপনার ফর্মটি সফলভাবে এডমিনের কাছে চলে গেছে।');
+                loadLocalData();
+                setTimeout(() => { document.getElementById('autoHistorySection').scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 1000);
+            } catch (err) { showAlert('error', 'স্টোরেজ ফুল!', 'লোকাল স্টোরেজ ফুল হয়ে গেছে। এডমিন প্যানেল থেকে ডাটা মুছুন।'); }
+            btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2 text-2xl pointer-events-none"></i> রিকোয়েস্ট পাঠিয়ে দিন'; btn.disabled = false;
+        });
+
+        document.getElementById('clearHistoryBtn').addEventListener('click', async function(e) {
+            e.preventDefault();
+            if(await showConfirm("ক্লিয়ার হিস্ট্রি", "সব হিস্ট্রি মুছে ফেলা হবে। নিশ্চিত?")) {
+                const phone = localStorage.getItem('userPhone');
+                let reqs = localStorage.getItem('nsCoin_requests');
+                reqs = reqs ? JSON.parse(reqs) : [];
+                reqs = reqs.filter(r => !(r.account === phone && r.status !== 'pending'));
+                localStorage.setItem('nsCoin_requests', JSON.stringify(reqs));
+                loadLocalData();
+            }
+        });
+
+        function promptDeleteUserHistory(dbId) { 
+            showConfirm("সতর্কতা", "হিস্ট্রি ডিলিট করতে চান?").then(res => {
+                if(res) {
+                    let reqs = localStorage.getItem('nsCoin_requests');
+                    reqs = reqs ? JSON.parse(reqs) : [];
+                    reqs = reqs.filter(r => r.dbId !== dbId);
+                    localStorage.setItem('nsCoin_requests', JSON.stringify(reqs));
+                    loadLocalData();
+                }
+            });
+        }
+        
+        function showUserImage(src) { document.getElementById('userFullSizeImage').src = src; document.getElementById('userImageModal').classList.remove('hidden'); }
+        document.getElementById('closeImageModalBtn').addEventListener('click', function(e) { e.preventDefault(); document.getElementById('userImageModal').classList.add('hidden'); });
+        
+        function openAdminProof(dbId) { let req = userRequests.find(r => r.dbId === dbId); if(req && req.adminProof) showUserImage(req.adminProof); }
+
+        function renderUserHistory() {
+            const phone = localStorage.getItem('userPhone'), section = document.getElementById('autoHistorySection'), container = document.getElementById('autoHistoryContainer');
+            if (!phone || userRequests.length === 0) { section.classList.add('hidden'); return; }
+            const myReqs = userRequests.filter(r => r.account === phone);
+            if (myReqs.length === 0) { section.classList.add('hidden'); return; }
+            section.classList.remove('hidden'); container.innerHTML = '';
+
+            myReqs.forEach(req => {
+                let statusColor, statusIcon, messageHTML, deleteBtnHTML = '', proofBtnHTML = '';
+                if (req.status === 'paid') {
+                    statusColor = 'bg-green-50 border-green-400';
+                    statusIcon = `<i class="fa-solid fa-check-circle text-xl mr-2 text-green-600"></i> <span class="text-green-700">পেমেন্ট কমপ্লিট</span>`;
+                    messageHTML = `<p class="text-green-700 font-bold">SMS: আপনার ${req.account} নাম্বারে ৳${req.total} পাঠানো হয়েছে।</p>`;
+                    deleteBtnHTML = `<button type="button" class="del-hist-btn text-gray-400 hover:text-red-600" data-id="${req.dbId}"><i class="fa-solid fa-trash-can text-lg pointer-events-none"></i></button>`;
+                    if(req.adminProof) proofBtnHTML = `<button type="button" class="view-proof-btn mt-3 w-full bg-green-200 text-green-800 py-2 rounded-lg font-bold text-sm" data-id="${req.dbId}"><i class="fa-solid fa-file-invoice mr-2 pointer-events-none"></i>পেমেন্ট প্রুফ দেখুন</button>`;
+                } else if (req.status === 'rejected') {
+                    statusColor = 'bg-red-50 border-red-400'; statusIcon = '<i class="fa-solid fa-circle-xmark text-xl mr-2 text-red-600"></i> <span class="text-red-700">বাতিল</span>';
+                    messageHTML = `<p class="text-red-700 font-bold">এডমিন মেসেজ: ${req.rejectReason}</p>`; deleteBtnHTML = `<button type="button" class="del-hist-btn text-gray-400 hover:text-red-600" data-id="${req.dbId}"><i class="fa-solid fa-trash-can text-lg pointer-events-none"></i></button>`;
+                } else {
+                    statusColor = 'bg-brand-light/30 border-brand-light'; statusIcon = '<i class="fa-solid fa-clock text-xl mr-2 text-brand animate-pulse"></i> <span class="text-brand">পেন্ডিং</span>';
+                    messageHTML = `<p class="text-brand font-medium">রিকোয়েস্টটি এডমিন চেক করছেন।</p>`;
+                }
+                container.innerHTML += `<div class="border-2 p-5 rounded-xl shadow-sm ${statusColor} relative"><div class="flex justify-between border-b pb-3 mb-3 pr-6"><span class="font-bold flex">${statusIcon}</span><span class="text-xs font-bold text-gray-500 bg-white px-2 py-1 rounded border">${req.date}</span></div><div class="absolute top-4 right-4">${deleteBtnHTML}</div><div class="bg-white p-4 rounded-lg font-bold flex justify-between mb-3 shadow-sm"><span class="text-xl">${req.amount}k ${req.type}</span><span class="text-2xl font-black">৳${req.total}</span></div><div class="p-4 bg-white rounded-lg shadow-sm">${messageHTML}${proofBtnHTML}</div></div>`;
+            });
+
+            document.querySelectorAll('.del-hist-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) { e.preventDefault(); promptDeleteUserHistory(this.getAttribute('data-id')); });
+            });
+            document.querySelectorAll('.view-proof-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) { e.preventDefault(); openAdminProof(this.getAttribute('data-id')); });
+            });
+        }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedColor = localStorage.getItem('nsCoinThemeColor'); if(savedColor) changeTheme(savedColor);
+            if (localStorage.getItem('nsCoinTheme') === 'dark') document.documentElement.classList.add('dark'); updateThemeIcon();
+            loadLocalData();
+        });
+    </script>
+</body>
+</html>
